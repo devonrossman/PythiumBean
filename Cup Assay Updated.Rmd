@@ -1,0 +1,154 @@
+---
+title: "Cup Assay Updated"
+author: "Devon"
+date: "May 9, 2016"
+output: html_document
+---
+
+Ordered Emergence Bar Graph Relative to Control[trial]
+
+```{r}
+library(scales)
+library(ggplot2)
+AllCup <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCup.csv"))
+DW2<-aggregate(AllCup$emergetrial, list(AllCup$Title,AllCup$Var), na.rm=TRUE, mean)
+se <- function(x) sqrt(var(x, na.rm=TRUE)/(length(na.omit(x))))
+serror <- (aggregate(AllCup$emergetrial, list(AllCup$Title,AllCup$Var), se))
+DWA <- cbind(DW2, serror$x)
+#DW <- DW[-c(1),]
+colnames(DWA) <- c("trt", "var", "eme", "SE")
+limits<-aes(ymax=eme+SE, ymin=eme-SE)
+#GH$path<-factor(GH$path, labels=c("Control", "P soj", "Py syl", "F oxy", "F sol", "AG 2-II", "AG 4"))
+#sigletters <- data.frame("a","b","c","d")yield$var<-factor(yield$var, labels=c("AG1", "AG2", "P1", "P2"))
+#DW <- transform(DW, trt = reorder (trt, rdw)
+y <- ggplot(DWA, aes(y=eme, 
+                    #fill=sdtrt, 
+                    x=factor(DWA$trt)))
+y+geom_bar(position="dodge", aes(x=reorder(trt, -eme)),  stat="identity")+
+facet_grid(var~.)+
+geom_errorbar(limits, position = "dodge")+
+labs(title="Emergence Effect of Pythium spp. Inoculation", x="Pythium spp.", y="Emergence \n (% of the NTC, Rice)")+
+ theme(plot.title=element_text(size=20, colour="black"),
+axis.title=element_text(size=13, colour="black"), axis.text.x=element_text(size=8, color="black", angle=90, hjust=1, vjust=1), axis.text.y=element_text(size=10, color="black"), strip.text.y = element_text(size = 10),
+strip.text.x = element_text(size = 10, color="black"))+
+scale_y_continuous(limits=c(0,120), oob=rescale_none)
+```
+
+
+
+Ordered Root Area Bar Graph Relative to Control[trial]
+
+```{r} 
+library(scales)
+library(ggplot2)
+AllCup <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCup.csv"))
+DW2<-aggregate(AllCup$rtareatrial, list(AllCup$Title,AllCup$Var), na.rm=TRUE, mean)
+se <- function(x) sqrt(var(x, na.rm=TRUE)/(length(na.omit(x))))
+serror <- (aggregate(AllCup$rtareatrial, list(AllCup$Title,AllCup$Var), se))
+DWA <- cbind(DW2, serror$x)
+#DW <- DW[-c(1),]
+colnames(DWA) <- c("trt", "var", "rat", "SE")
+limits<-aes(ymax=rat+SE, ymin=rat-SE)
+#GH$path<-factor(GH$path, labels=c("Control", "P soj", "Py syl", "F oxy", "F sol", "AG 2-II", "AG 4"))
+#sigletters <- data.frame("a","b","c","d")yield$var<-factor(yield$var, labels=c("AG1", "AG2", "P1", "P2"))
+#DW <- transform(DW, trt = reorder (trt, rdw)
+y <- ggplot(DWA, aes(y=rat, 
+                    #fill=sdtrt, 
+                    x=factor(DWA$trt)))
+y+geom_bar(position="dodge", aes(x=reorder(trt, -rat)),  stat="identity")+
+facet_grid(var~.)+
+geom_errorbar(limits, position = "dodge")+
+labs(title="Root Area Effect of Pythium spp. Inoculation", x="Pythium spp.", y="Root Area \n (% of the NTC, Rice)")+
+  theme(plot.title=element_text(size=20, colour="black"),
+axis.title=element_text(size=13, colour="black"), axis.text.x=element_text(size=8, color="black", angle=90, hjust=1, vjust=1), axis.text.y=element_text(size=10, color="black"), strip.text.y = element_text(size = 10),
+strip.text.x = element_text(size = 10, color="black"))+
+scale_y_continuous(limits=c(0,120), oob=rescale_none)
+
+
+```
+
+
+Ordered Root Length Bar Graph Relative to Control[trial]
+```{r} 
+library(scales)
+library(ggplot2)
+library(plyr)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCup.csv"))
+Y3<-subset(Y, !(Y$rtlngthtrial=="NA"))
+yield<-( ddply(Y3, c("Title", "Var"), summarise,
+               N    = length(rtlngthtrial),
+               mean = mean(rtlngthtrial, na.rm=TRUE),
+               sd   = sd(rtlngthtrial),
+               se   = sd / sqrt(N),
+               n=1))
+limits<-aes(ymax=mean+se, ymin=mean-se)
+y <- ggplot(yield, aes(y=mean,
+                    x=factor(Title)))
+y+geom_bar(position="dodge", aes(x=reorder(Title, -mean)),  stat="identity")+
+facet_grid(Var~.)+
+geom_errorbar(limits, position = "dodge")+
+labs(title="Root Length Effect of Pythium spp. Inoculation", x="Pythium spp.", y="Root Length \n (% of the NTC, Rice)")+
+  theme(plot.title=element_text(size=20, colour="black"),
+axis.title=element_text(size=13, colour="black"), axis.text.x=element_text(size=8, color="black", angle=90, hjust=1, vjust=1), axis.text.y=element_text(size=10, color="black"), strip.text.y = element_text(size = 10),
+strip.text.x = element_text(size = 10, color="black"))+
+scale_y_continuous(limits=c(0,125), oob=rescale_none)
+
+
+```
+
+
+Ordered Shoot Wght Bar Graph Relative to Control[trial]
+```{r} 
+library(scales)
+library(ggplot2)
+library(plyr)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCup.csv"))
+Y3<-subset(Y, !(Y$shtwghttrial=="NA"))
+yield<-( ddply(Y3, c("Title", "Var"), summarise,
+               N    = length(shtwghttrial),
+               mean = mean(shtwghttrial, na.rm=TRUE),
+               sd   = sd(shtwghttrial),
+               se   = sd / sqrt(N),
+               n=1))
+limits<-aes(ymax=mean+se, ymin=mean-se)
+y <- ggplot(yield, aes(y=mean,
+                    x=factor(Title)))
+y+geom_bar(position="dodge", aes(x=reorder(Title, -mean)),  stat="identity")+
+facet_grid(Var~.)+
+geom_errorbar(limits, position = "dodge")+
+labs(title="Shoot Weight Effect of Pythium spp. Inoculation", x="Pythium spp.", y="Shoot Weight \n (% of the NTC, Rice)")+
+  theme(plot.title=element_text(size=20, colour="black"),
+axis.title=element_text(size=13, colour="black"), axis.text.x=element_text(size=8, color="black", angle=90, hjust=1, vjust=1), axis.text.y=element_text(size=10, color="black"), strip.text.y = element_text(size = 10),
+strip.text.x = element_text(size = 10, color="black"))+
+scale_y_continuous(limits=c(0,125), oob=rescale_none)
+```
+
+
+
+Ordered Root Wght Bar Graph Relative to Control[trial]
+```{r} 
+library(scales)
+library(ggplot2)
+library(plyr)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtwghttrial=="NA"))
+yield<-( ddply(Y3, c("Title", "Var"), summarise,
+               N    = length(rtwghttrial),
+               mean = mean(rtwghttrial, na.rm=TRUE),
+               sd   = sd(rtwghttrial),
+               se   = sd / sqrt(N),
+               n=1))
+limits<-aes(ymax=mean+se, ymin=mean-se)
+y <- ggplot(yield, aes(y=mean,
+                    x=factor(Title)))
+y+geom_bar(position="dodge", 
+      aes(x=reorder(Title, -mean)), 
+      stat="identity")+
+facet_grid(Var~.)+
+geom_errorbar(limits, position = "dodge")+
+labs(title="Root Weight Effect of Pythium spp. Inoculation", x="Pythium spp.", y="Root Weight \n (% of the NTC, Rice)")+
+  theme(plot.title=element_text(size=20, colour="black"),
+axis.title=element_text(size=13, colour="black"), axis.text.x=element_text(size=8, color="black", angle=90, hjust=1, vjust=0.5), axis.text.y=element_text(size=10, color="black"), strip.text.y = element_text(size = 10),
+strip.text.x = element_text(size = 10, color="black"))+
+scale_y_continuous(limits=c(0,125), oob=rescale_none)
+```
