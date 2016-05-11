@@ -10,7 +10,7 @@ Ordered Emergence Bar Graph Relative to Control[trial]
 ```{r}
 library(scales)
 library(ggplot2)
-AllCup <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCup.csv"))
+AllCup <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 DW2<-aggregate(AllCup$emergetrial, list(AllCup$Title,AllCup$Var), na.rm=TRUE, mean)
 se <- function(x) sqrt(var(x, na.rm=TRUE)/(length(na.omit(x))))
 serror <- (aggregate(AllCup$emergetrial, list(AllCup$Title,AllCup$Var), se))
@@ -41,7 +41,7 @@ Ordered Root Area Bar Graph Relative to Control[trial]
 ```{r} 
 library(scales)
 library(ggplot2)
-AllCup <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCup.csv"))
+AllCup <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 DW2<-aggregate(AllCup$rtareatrial, list(AllCup$Title,AllCup$Var), na.rm=TRUE, mean)
 se <- function(x) sqrt(var(x, na.rm=TRUE)/(length(na.omit(x))))
 serror <- (aggregate(AllCup$rtareatrial, list(AllCup$Title,AllCup$Var), se))
@@ -73,7 +73,7 @@ Ordered Root Length Bar Graph Relative to Control[trial]
 library(scales)
 library(ggplot2)
 library(plyr)
-Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCup.csv"))
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 Y3<-subset(Y, !(Y$rtlngthtrial=="NA"))
 yield<-( ddply(Y3, c("Title", "Var"), summarise,
                N    = length(rtlngthtrial),
@@ -102,7 +102,7 @@ Ordered Shoot Wght Bar Graph Relative to Control[trial]
 library(scales)
 library(ggplot2)
 library(plyr)
-Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCup.csv"))
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 Y3<-subset(Y, !(Y$shtwghttrial=="NA"))
 yield<-( ddply(Y3, c("Title", "Var"), summarise,
                N    = length(shtwghttrial),
@@ -122,7 +122,6 @@ axis.title=element_text(size=13, colour="black"), axis.text.x=element_text(size=
 strip.text.x = element_text(size = 10, color="black"))+
 scale_y_continuous(limits=c(0,125), oob=rescale_none)
 ```
-
 
 
 Ordered Root Wght Bar Graph Relative to Control[trial]
@@ -152,3 +151,56 @@ axis.title=element_text(size=13, colour="black"), axis.text.x=element_text(size=
 strip.text.x = element_text(size = 10, color="black"))+
 scale_y_continuous(limits=c(0,125), oob=rescale_none)
 ```
+
+
+```{r}
+library(scales)
+library(ggplot2)
+library(plyr)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+RHAllData<-subset(Y,!Y$Var=="Z")
+boxplot(rtareatrial~Clade, data=RHAllData, las=2)
+rb <- boxplot(rtareatrial~Clade, data=RHAllData, las=2)
+mn.t <- tapply(RHAllData$rtareatrial, RHAllData$Clade, mean)
+sd.t <- tapply(RHAllData$rtareatrial, RHAllData$Clade, sd)
+se <- function(x) sqrt(var(x, na.rm=TRUE)/(length(na.omit(x))))
+serror <- aggregate (RHAllData$rtareatrial, list(RHAllData$Clade), se)
+serror <- tapply (RHAllData$rtareatrial, list(RHAllData$Clade), se)
+xi <- seq(rb$n)
+#optional
+#optional
+arrows(xi, mn.t - serror, xi, mn.t + serror,code = 3, col = "pink", angle = 75, length = .1)
+points(xi, mn.t, col = "orange", pch = 18)
+```
+
+#setwd 
+#This means that you can set a working directory and quite simply extract data from them!
+
+You can have RMD with different formats - when making a new RMarkdown, you can select something "from template"
+Use plain address as a link; if you want it to show up, you can use a ! before hand; [actual text] (call the file)
+
+You can control output of Rmd files;{r chunk_name, ...}
+cache, fig.width, fig.height
+
+knit("markdownfilename.Rmd", "markdownfile.R")
+
+
+
+par(mfrow=c(1,1),xpd=FALSE, mar=c(12,5,2.5,2+0.1))
+RHrtm <- aggregate (RHAllData$emergetrial, list(RHAllData$Title), mean)
+colnames(RHrtm) <-(c("Title", "emergetrial"))
+plot(RHrtm$emergetrial, cex=0.6, las=2, xaxt="n", xlab="", ylab="", ylim=c(0,120))
+axis(1, at=1:23, labels=RHrtm$Title, las=2, cex.axis=0.8)
+mtext(Seedling Emergence", side=2, line=3.5)
+mtext("As a Percentage of NTC, Rice", side=2, line=2.5, cex=0.63)
+abline(h=100, lty=2, col="grey")
+abline(h=0)
+arrows (1:23, RHrtm$emergetrial - 1.96*serror$x, 1:23, RHrtm$emergetrial + 1.96*serror$x, code = 3, col = "red", angle = 90, length = .1)
+
+
+
+
+
+```
+
+
