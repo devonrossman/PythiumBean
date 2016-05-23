@@ -488,30 +488,23 @@ Y4<-( ddply(Y3, c("Title", "Temp"), summarise,
             medianSev = median(Sev),
             sdsev=sd(Sev),
             sesev= sdsev/sqrt(N)))
-Y4<-aggregate(Y3$Sev, list(Y3$Title,Y3$Var, Y3$Temp), na.rm=TRUE, mean)
-se <- function(x) sqrt(var(x, na.rm=TRUE)/(length(na.omit(x))))
-serror <- (aggregate(Y3$Sev, list(Y3$Title,Y3$Var, Y3$Temp), se))
-Y4 <- cbind(Y4, serror$x)
-#DW <- DW[-c(1),]
-colnames(Y4) <- c("Title", "var", "Temp", "sev", "SE")
-limits<-aes(ymax=Y4$sev+Y4$SE, ymin=Y4$sev-Y4$SE)
-#limits<- cbind(Y4$meanSev+1.96*Y4$sesev, Y4$meanSev-1.96*Y4$sesev)
-#Y4<-cbind(limits, Y4)
-Y4$Temp<-as.factor(Y4$Temp)
-#limits<-aes(ymax=Y4$meanSev+Y4$sesev, ymin=Y4$meanSev-Y4$sesev)
-ggplot(Y4, aes(x=Title, y=sev)) + 
-  geom_point(aes(color=Y4$Temp ), stat = "identity", size=2) + 
-  theme_light() +
-  theme(axis.text.x=element_text(angle=90, hjust = 1, vjust = 0.5, face="italic")) +
-  scale_color_manual(values=c("#80b1d3","#fb8072"))+
-  geom_errorbar(aes(limits, color=Y4$Temp, position="dodge"))+
-  labs(x="Species", y="Disease Severity Index", color="Temperature \n in degrees Celsius")
 
+ limits<- cbind(Y4$meanSev+1.96*Y4$sesev, Y4$meanSev-1.96*Y4$sesev)
+ colnames(limits)<-c("LL", "UL")
+ Y4<-cbind(limits, Y4)
+ Y4$Temp<-as.factor(Y4$Temp)
+ 
+ ggplot(Y4, aes(x=Title, y=meanSev)) + 
+   geom_point(aes(color=Y4$Temp ), stat = "summary", fun.y="mean", size=2) + 
+   theme_light() +
+   theme(axis.text.x=element_text(angle=90, hjust = 1, vjust = 0.5, face="italic")) +
+   scale_color_manual(values=c("#80b1d3","#fb8072"))+
+   geom_errorbar(aes(ymin=Y4$LL, ymax=Y4$UL, color=Y4$Temp, width=0.2))+
+   labs(x="Species", y="Disease Severity Index", color="Temperature \n in degrees Celsius")
 ```
 
-
+#Virulence sorted Severity by Temperature - Species
 ```{r, echo=FALSE}
-
 library(scales)
 library(plyr)
 library(vegan)
@@ -530,21 +523,58 @@ se <- function(x) sqrt(var(x, na.rm=TRUE)/(length(na.omit(x))))
 serror <- (aggregate(Y3$Sev, list(Y3$Title, Y3$Temp), se))
 Y4 <- cbind(Y4, serror$x)
 colnames(Y4) <- c("Title", "Temp", "sev", "SE")
-limits<-aes(ymax=sev+SE, ymin=sev-SE)
+limits<-aes(ymax=sev+(1.96*SE), ymin=sev-(1.96*SE))
 Y4$Temp<-as.factor(Y4$Temp)
 
 y <- ggplot(Y4, aes(y=sev, 
                     #fill=sdtrt, 
                     x=factor(Y4$Title), color=Y4$Temp))
 y+geom_point(position="dodge", aes(x=reorder(Title, -sev)),  stat="identity")+
-geom_errorbar(limits, position="dodge", stat="identity", width=0.2)+
-labs(title="Emergence Effect of Pythium spp. Inoculation", x="Pythium spp.", y="Emergence \n (% of the NTC, Rice)")+
+  theme_light()+
+geom_errorbar(limits, stat="identity", width=0.3)+
+labs(title="Emergence Effect of Pythium spp. Inoculation", x="Pythium spp.", y="Disease Severity Score")+
  theme(plot.title=element_text(size=20, colour="black"),
 axis.title=element_text(size=13, colour="black"), axis.text.x=element_text(size=8, color="black", angle=90, hjust=1, vjust=1), axis.text.y=element_text(size=10, color="black"), strip.text.y = element_text(size = 10),
 strip.text.x = element_text(size = 10, color="black"))+
-scale_y_continuous(limits=c(0,120), oob=rescale_none)
+scale_y_continuous(limits=c(0,1), oob=rescale_none)+
+  geom_vline(xintercept=14.5)
 
+```
 
+#Virulence-sorted Severity by Temperature - Treatment
+```{r, echo=FALSE}
+library(scales)
+library(plyr)
+library(vegan)
+library(cluster)
+library(ade4)
+library(stats)
+library(tabplot)
+library(ggplot2)
+#update.packages("tabplot")
+rm(list = ls())
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
+Y3<-subset(Y, !(Y$Sev=="NA") #& !(Y$Var=="Z"))
+)
+Y4<-aggregate(Y3$Sev, list(Y3$Trt, Y3$Clade, Y3$Temp), na.rm=TRUE, mean)
+se <- function(x) sqrt(var(x, na.rm=TRUE)/(length(na.omit(x))))
+serror <- (aggregate(Y3$Sev, list(Y3$Trt, Y3$Clade, Y3$Temp), se))
+Y4 <- cbind(Y4, serror$x)
+colnames(Y4) <- c("trt", "Clade", "Temp", "sev", "SE")
+limits<-aes(ymax=sev+(1.96*SE), ymin=sev-(1.96*SE))
+Y4$Temp<-as.factor(Y4$Temp)
 
+y <- ggplot(Y4, aes(y=sev, 
+                    #fill=sdtrt, 
+                    x=factor(Y4$trt), shape=Y4$Temp, color=Y4$Clade))
+y+geom_point(position="dodge", aes(x=reorder(trt, -sev)),  stat="identity", size=2.75)+
+  theme_light()+
+geom_errorbar(limits, stat="identity", width=0.3)+
+labs(title="Emergence Effect of Pythium spp. Inoculation", x="Pythium spp.", y="Disease Severity Score")+
+ theme(plot.title=element_text(size=20, colour="black"),
+axis.title=element_text(size=13, colour="black"), axis.text.x=element_text(size=8, color="black", angle=90, hjust=1, vjust=1), axis.text.y=element_text(size=10, color="black"), strip.text.y = element_text(size = 10),
+strip.text.x = element_text(size = 10, color="black"))+
+scale_y_continuous(limits=c(0,1), oob=rescale_none)+
+  geom_vline(xintercept=37.5)
 
 ```
