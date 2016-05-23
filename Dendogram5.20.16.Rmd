@@ -137,6 +137,8 @@ rmse(bray.co.resid, bray.v)
 Divisive Clustering
 Raw Data Relative to Trial
 ```{r}
+library(plyr)
+
 Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCup.csv"))
 Y3<-subset(Y, !(Y$rtarea=="NA") & !(Y$rtwght=="NA"))
 Y4<-( ddply(Y3, c("Title"), summarise,
@@ -173,27 +175,6 @@ pheatmap(stuff, show_rownames = TRUE, show_colnames = TRUE, fontsize_row=9,
 
 ```
 
-
-Heatmap of 4 Cup Assay Variables, default
-``{r}
-library(pheatmap)
-library(plyr)
-Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
-Y3<-subset(Y, !(Y$rtarea=="NA") & !(Y$rtwght=="NA") & (Y$Var=="RH"))
-Y3$tisolate<-paste(Y3$Title,Y3$Trt)
-Y4<-( ddply(Y3, c("Var", "Title"), summarise,
-               N    = length(rtwght),
-            meanwght = mean(rtwghttrial, na.rm=TRUE),
-            meanlngth = mean(rtlngthtrial, na.rm=TRUE),
-            meanarea = mean(rtareatrial, na.rm=TRUE), meanemerge = mean(emergetrial, na.rm=TRUE)))
-stuff<-cbind(Y4$meanwght, Y4$meanlngth, Y4$meanarea, Y4$meanemerge)
-rownames(stuff)<-Y4$Title
-colnames(stuff)<-c("Root Dry Weight", "Root Length", "Root Area", "Emergence")
-pheatmap(stuff, show_rownames = TRUE, show_colnames = TRUE, fontsize_row=9,
-         #cluster_rows=hc.rows, 
-         clustering_method="average")
-
-```
 
 Chord cluster
 ```{r}
@@ -253,7 +234,7 @@ pheatmap(stuff, show_rownames = TRUE, show_colnames = TRUE,
          clustering_method="average")
 ```
 
-Seed Rot
+Seed Rot by Isolate
 ```{r}
 library(pheatmap)
 library(plyr)
@@ -324,7 +305,7 @@ pheatmap(stuff, show_rownames = TRUE, show_colnames = TRUE,
 
 ```
 
-
+Cup Assay pheatmap by variety
 ```{r}
 library(scales)
 library(ggplot2)
@@ -389,7 +370,7 @@ pheatmap(Dend, show_rownames = TRUE, show_colnames = TRUE,
 ```
 
 
-By Clade
+By Clade - not worthwhile
 ```{r}
 library(scales)
 library(ggplot2)
@@ -454,7 +435,7 @@ pheatmap(Dend, show_rownames = TRUE, show_colnames = TRUE,
          clustering_method="average")
 ```
 
-
+Plot of Stuff...
 ```{r, echo=FALSE}
 library(scales)
 library(plyr)
@@ -467,32 +448,32 @@ library(ggplot2)
 #update.packages("tabplot")
 rm(list = ls())
 Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCup.csv"))
-Y3<-subset(Y, !(Y$rtarea=="NA") & !(Y$rtwght=="NA") #& !(Y$Var=="Z"))
-)
-Y4<-( ddply(Y3, c("Var", "Title"), summarise,
+YRH<-subset(Y, !(Y$rtarea=="NA") & !(Y$rtwght=="NA") & !(Y$Var=="Z"))
+YRH1<-( ddply(YRH, c("Title"), summarise,
                N    = length(rtwghttrial),
             meanwght = mean(rtwghttrial, na.rm=TRUE),
             meanlngth = mean(rtlngthtrial, na.rm=TRUE),
             meanarea = mean(rtareatrial, na.rm=TRUE),
             meanemerge = mean(emergetrial, na.rm=TRUE)))
-Y5<-as.data.frame(cbind(Y4$meanarea, Y4$meanlngth, Y4$meanwght, Y4$meanemerge))
-#If you get the following error:
-#Error in .Call.graphics(C_palette2, .Call(C_palette2, NULL)) : invalid graphics state
-#Use the following code: dev.off() 
-  rownames(Y5)<-Y4$Title
-  colnames(Y5)<-names2<-c("Root Area", "Root Length", "Root Weight", "Emergence")
-
-  #tableplot(Y5, ycol=names2)
-g<-ggplot(Y4)
-g+geom_point(aes(Y4$Title, Y4$meanwght, fill=Y4$Var, stat="identity"), position="dodge")+
-  theme(axis.text.x = element_text(angle=90, hjust=1, vjust=0.5))+
-geom_point(aes(Y4$Title, Y4$meanarea, fill=Y4$Var, stat="identity"), position="dodge")
+YRH<-subset(Y, !(Y$rtarea=="NA") & !(Y$rtwght=="NA") & !(Y$Var=="RH"))
+YZ1<-( ddply(YRH, c("Title"), summarise,
+               N    = length(rtwghttrial),
+            meanwght = mean(rtwghttrial, na.rm=TRUE),
+            meanlngth = mean(rtlngthtrial, na.rm=TRUE),
+            meanarea = mean(rtareatrial, na.rm=TRUE),
+            meanemerge = mean(emergetrial, na.rm=TRUE)))
+YBean<-as.data.frame(cbind(YRH1, YZ1$ YZ1$meanwght))
+g<-ggplot(YBean)
+g+geom_point(aes(YBean$Title, YBean$meanwght, fill=Y4$Var, stat="identity"), position="dodge")+
+  geom_point(aes(YBean$Title, YBean$YZ1$meanwght, stat="identity"), position="dodge")+
+  theme(axis.text.x = element_text(angle=90, hjust=1, vjust=0.5))
+geom_errorbar(aes(YBean$Title, YBean$meanarea, fill=Y4$Var, stat="identity"))
 
 ```
 
 
+Alphabetically sorted Severity by Temperature
 ```{r, echo=TRUE}
-
 library(scales)
 library(plyr)
 library(vegan)
@@ -506,7 +487,7 @@ rm(list = ls())
 Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
 Y3<-subset(Y, !(Y$Sev=="NA") #& !(Y$Var=="Z"))
 )
-Y4<-( ddply(Y3, c("Var", "Title", "Temp"), summarise,
+Y4<-( ddply(Y3, c("Title", "Temp"), summarise,
                N    = length(Sev),
             meanSev = mean(Sev, na.rm=TRUE),
             medianSev = median(Sev),
@@ -517,14 +498,13 @@ colnames(limits)<-c("LL", "UL")
 Y4<-cbind(limits, Y4)
 Y4$Temp<-as.factor(Y4$Temp)
 
-ggplot(Y4, aes(x=reorder(Title, LL, median), y=meanSev)) + 
-  geom_point(aes(fill=Y4$Temp), stat = "summary", fun.y="mean", size=2) + 
+ggplot(Y4, aes(x=Title, y=meanSev)) + 
+  geom_point(aes(color=Y4$Temp ), stat = "summary", fun.y="mean", size=2) + 
   theme_light() +
   theme(axis.text.x=element_text(angle=90, hjust = 1, vjust = 0.5, face="italic")) +
   scale_color_manual(values=c("#80b1d3","#fb8072"))+
-  geom_errorbar(aes(limits, width=0.2, stat= "summary", fun.y="mean")) + 
-  labs(x="Species", y="Disease Severity Index")
-
+  geom_errorbar(aes(ymin=Y4$LL, ymax=Y4$UL, color=Y4$Temp, width=0.2))+
+  labs(x="Species", y="Disease Severity Index", color="Temperature \n in degrees Celsius")
 
 ```
 
@@ -647,7 +627,6 @@ pheatmap(stuff, show_rownames = TRUE, show_colnames = TRUE,
          clustering_method="average")
 
 ```
-
 
 Y5<-( ddply(Y4, c("Var", "Title"), summarise,     
             scalewght=scale(meanwght, center=TRUE, scale=TRUE),
