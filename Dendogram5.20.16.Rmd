@@ -607,29 +607,6 @@ print(a5)
 
 ```
 
-
-
-#Validation of Model Selection for Seedling Assay TRIAL
-``{r, echo=FALSE}
-library(lme4)
-library(lsmeans)
-library(pbkrtest)
-library(nlme)
-Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
-Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA")
-)
-fit <- lme(cbind(rtareatrial, rtlngthtrial, rtwghttrial) ~ Title*Var, random= ~1|Iso, data=Y3)
-fit1 <- lme(cbind(rtareatrial, rtlngthtrial, rtwghttrial) ~ Title*Var, random= ~1|Set/Iso, data=Y3)
-fit2 <- lme(cbind(rtareatrial, rtlngthtrial, rtwghttrial) ~ Title*Var, random = ~1|Set, data=Y3)
-fit3 <- lme(cbind(rtareatrial, rtlngthtrial, rtwghttrial) ~ Title*Var, random = ~1|Set/Title, data=Y3)
-fit4 <- lme(cbind(rtwghttrial) ~ Title*Var, random = ~1|Set/Trial/Title/Iso, data=Y3)
-a<-anova(fit,fit1,fit2, fit3, fit4)
-print(a)
-
-
-```
-
-
 #Validation of Model Selection for Seedling Assay TRIAL
 ```{r, echo=FALSE}
 library(lme4)
@@ -651,8 +628,8 @@ fit4 <- lmer(rtwghttrial ~ Title*Var + (1|Trial/Set) + (1|Iso/Title), data=Y3)
 a<-anova(fit,fit1,fit2,fit3,fit4)
 print(a)
 
-rg1<-ref.grid(m1, cov.reduce = mean, options = get.lsm.option("ref.grid"), Y3)
-ls1<-lsmeans(rg1, specs="Title", test=)
+#rg1<-ref.grid(m1, cov.reduce = mean, options = get.lsm.option("ref.grid"), Y3)
+#ls1<-lsmeans(rg1, specs="Title", test=)
 
 ```
 
@@ -679,10 +656,10 @@ fit4 <- lmer(rtwght ~ Title*Var + (1|Iso/Title)+ (Rep/Trial/Set), data=Y3)
 a<-anova(fit,fit1,fit2,fit3,fit4)
 print(a)
 
-rg1<-ref.grid(m1, cov.reduce = mean, options = get.lsm.option("ref.grid"), Y3)
+#rg1<-ref.grid(m1, cov.reduce = mean, options = #get.lsm.option("ref.grid"), Y3)
 ls1<-lsmeans(fit4, pairwise~Title)
 print(ls1)
-ls1<-lsmeans(rg1, specs="Title", test=)
+#ls1<-lsmeans(rg1, specs="Title", test=)
 
 ```
 
@@ -708,4 +685,24 @@ print(a)
 rg1<-ref.grid(m1, cov.reduce = mean, options = get.lsm.option("ref.grid"), Y3)
 ls1<-lsmeans(rg1, specs="Title", test=)
 
+```
+
+
+
+#Validation of Model Selection for Seedling Assay TRIAL
+``{r, echo=FALSE}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(nlme)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA")
+)
+fit <- lme(cbind(rtareatrial, rtlngthtrial, rtwghttrial) ~ Title*Var, random= ~1|Iso, data=Y3)
+fit1 <- lme(cbind(rtareatrial, rtlngthtrial, rtwghttrial) ~ Title*Var, random= ~1|Set/Iso, data=Y3)
+fit2 <- lme(cbind(rtareatrial, rtlngthtrial, rtwghttrial) ~ Title*Var, random = ~1|Set, data=Y3)
+fit3 <- lme(cbind(rtareatrial, rtlngthtrial, rtwghttrial) ~ Title*Var, random = ~1|Set/Title, data=Y3)
+fit4 <- lme(cbind(rtwghttrial) ~ Title*Var, random = ~1|Set/Trial/Title/Iso, data=Y3)
+a<-anova(fit,fit1,fit2, fit3, fit4)
+print(a)
 ```
