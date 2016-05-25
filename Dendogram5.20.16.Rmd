@@ -578,3 +578,152 @@ scale_y_continuous(limits=c(0,1), oob=rescale_none)+
   geom_vline(xintercept=37.5)
 
 ```
+
+
+#Validation of Model Selection for Seed Assay
+```{r, echo=FALSE}
+library(lme4)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
+Y3<-subset(Y, !(Y$Sev=="NA") #& !(Y$Var=="Z"))
+)
+m1 <- lmer(Sev ~ Title*Var*Temp + (1 | Set) + (1 | Set:Trial) + (1 | Trial:Rep) + (1 | Iso:Title), data=Y3)
+m2 <- lmer(Sev ~ Title*Var*Temp + (1 | Set) + (1 | Trial:Rep) + (1 | Iso:Title), data=Y3)
+m3 <- lmer(Sev ~ Title*Var*Temp + (1 | Set) + (1 | Iso:Title), data=Y3)
+m4 <- lmer(Sev ~ Title*Var*Temp-(Title:Var:Temp) + (1 | Set) + (1 | Iso:Title), data=Y3)
+m5 <- lmer(Sev ~ Title*Var*Temp-(Title:Var:Temp) + (1 | Iso:Title), data=Y3)
+
+m6 <- lmer(Sev ~ Title*Var*Temp-(Title:Var:Temp) + (1 | Iso), data=Y3)
+a1<-anova(m2, m1, test="Chisq")
+a2<-anova(m3, m2, test="Chisq")
+a3<-anova(m4, m3, test="Chisq")
+a4<-anova(m5, m4, test="Chisq")
+a5<-anova(m6, m5, test="Chisq")
+
+print(a1)
+print(a2)
+print(a3)
+print(a4)
+print(a5)
+
+```
+
+
+
+#Validation of Model Selection for Seedling Assay RtWght
+```{r, echo=FALSE}
+library(lme4)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtwghttrial=="NA") #& !(Y$Var=="Z"))
+)
+m1 <- lmer(rtwghttrial ~ Title*Var + (1 | Set) + (1 | Set:Trial) + (1 | Trial:Rep) + (1 | Iso:Title), data=Y3)
+m2 <- lmer(rtwghttrial ~ Title*Var + (1|Set:Trial) + (1 | Trial:Rep) + (1 | Iso:Title), data=Y3)
+m3 <- lmer(rtwghttrial ~ Title*Var + (1 | Set:Trial) + (1 | Iso:Title), data=Y3)
+m4 <- lmer(rtwghttrial ~ (Title*Var - Title:Var) + (1 | Trial:Set) + (1 | Iso:Title), data=Y3)
+m5 <- lmer(rtwghttrial ~ (Title*Var - Title:Var) + (1 | Trial:Set), data=Y3)
+m5.5<-lmer(rtwghttrial ~ Title*Var-(Title:Var) + (1 | Set) + (1 | Iso), data=Y3)
+m6 <-lmer(rtwghttrial ~ (Title*Var - Title:Var) + (1 | Iso), data=Y3)
+a1<-anova(m2, m1, test="Chisq")
+a2<-anova(m3, m2, test="Chisq")
+a3<-anova(m4, m3, test="Chisq")
+a4<-anova(m5, m4, test="Chisq")
+a5<-anova(m6, m5, test="Chisq")
+a5.5<-anova(m5.5, m6, test="Chisq")
+a4.5<-anova(m5.5, m4, test="Chisq")
+print(a1)
+print(a2)
+print(a3)
+print(a4)
+print(a5)
+print(a5.5)
+print(a4.5)
+```
+
+
+#Validation of Model Selection for Seedling Assay RtArea
+```{r, echo=FALSE}
+library(lme4)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtareatrial=="NA") #& !(Y$Var=="Z"))
+)
+m1 <- lmer(rtareatrial ~ Title*Var + (1 | Set) + (1 | Set:Trial) + (1 | Trial:Rep) + (1 | Iso:Title), data=Y3)
+m2 <- lmer(rtareatrial ~ Title*Var + (1|Set:Trial) + (1 | Trial:Rep) + (1 | Iso:Title), data=Y3)
+m3 <- lmer(rtareatrial ~ Title*Var + (1 | Set:Trial) + (1 | Iso:Title), data=Y3)
+m4 <- lmer(rtareatrial ~ (Title*Var - Title:Var) + (1 | Trial:Set) + (1 | Iso:Title), data=Y3)
+m5 <- lmer(rtareatrial ~ (Title*Var - Title:Var) + (1 | Trial:Set), data=Y3)
+m5.5<-lmer(rtareatrial ~ Title*Var-(Title:Var) + (1 | Set) + (1 | Iso), data=Y3)
+m6 <-lmer(rtareatrial ~ (Title*Var - Title:Var) + (1 | Iso), data=Y3)
+a1<-anova(m2, m1, test="Chisq")
+a2<-anova(m3, m2, test="Chisq")
+a3<-anova(m4, m3, test="Chisq")
+a4<-anova(m5, m4, test="Chisq")
+a5<-anova(m6, m5, test="Chisq")
+a5.5<-anova(m5.5, m6, test="Chisq")
+a4.5<-anova(m5.5, m4, test="Chisq")
+print(a1)
+print(a2)
+print(a3)
+print(a4)
+print(a5)
+print(a5.5)
+print(a4.5)
+```
+
+
+#Validation of Model Selection for Seedling Assay RtLngth
+```{r, echo=FALSE}
+library(lme4)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtlngthtrial=="NA") #& !(Y$Var=="Z"))
+)
+m1 <- lmer(rtlngthtrial ~ Title*Var + (1 | Set) + (1 | Set:Trial) + (1 | Trial:Rep) + (1 | Iso:Title), data=Y3)
+m2 <- lmer(rtlngthtrial ~ Title*Var + (1|Set:Trial) + (1 | Trial:Rep) + (1 | Iso:Title), data=Y3)
+m3 <- lmer(rtlngthtrial ~ Title*Var + (1 | Set:Trial) + (1 | Iso:Title), data=Y3)
+m4 <- lmer(rtlngthtrial ~ (Title*Var - Title:Var) + (1 | Trial:Set) + (1 | Iso:Title), data=Y3)
+m5 <- lmer(rtlngthtrial ~ (Title*Var - Title:Var) + (1 | Trial:Set), data=Y3)
+m5.5<-lmer(rtlngthtrial ~ Title*Var-(Title:Var) + (1 | Set) + (1 | Iso), data=Y3)
+m6 <-lmer(rtlngthtrial ~ (Title*Var - Title:Var) + (1 | Iso), data=Y3)
+a1<-anova(m2, m1, test="Chisq")
+a2<-anova(m3, m2, test="Chisq")
+a3<-anova(m4, m3, test="Chisq")
+a4<-anova(m5, m4, test="Chisq")
+a5<-anova(m6, m5, test="Chisq")
+a5.5<-anova(m5.5, m6, test="Chisq")
+a4.5<-anova(m5.5, m4, test="Chisq")
+print(a1)
+print(a2)
+print(a3)
+print(a4)
+print(a5)
+print(a5.5)
+print(a4.5)
+```
+
+
+#Validation of Model Selection for Seedling Assay Emerge
+```{r, echo=FALSE}
+library(lme4)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$emergetrial=="NA") #& !(Y$Var=="Z"))
+)
+m1 <- lmer(emergetrial ~ Title*Var + (1 | Set) + (1 | Set:Trial) + (1 | Trial:Rep) + (1 | Iso:Title), data=Y3)
+m2 <- lmer(emergetrial ~ Title*Var + (1|Set:Trial) + (1 | Trial:Rep) + (1 | Iso:Title), data=Y3)
+m3 <- lmer(emergetrial ~ Title*Var + (1 | Set:Trial) + (1 | Iso:Title), data=Y3)
+m4 <- lmer(emergetrial ~ (Title*Var - Title:Var) + (1 | Trial:Set) + (1 | Iso:Title), data=Y3)
+m5 <- lmer(emergetrial ~ (Title*Var - Title:Var) + (1 | Trial:Set), data=Y3)
+m5.5<-lmer(emergetrial ~ Title*Var-(Title:Var) + (1 | Set) + (1 | Iso), data=Y3)
+m6 <-lmer(emergetrial ~ (Title*Var - Title:Var) + (1 | Iso), data=Y3)
+a1<-anova(m2, m1, test="Chisq")
+a2<-anova(m3, m2, test="Chisq")
+a3<-anova(m4, m3, test="Chisq")
+a4<-anova(m5, m4, test="Chisq")
+a5<-anova(m6, m5, test="Chisq")
+a5.5<-anova(m5.5, m6, test="Chisq")
+a4.5<-anova(m5.5, m4, test="Chisq")
+print(a1)
+print(a2)
+print(a3)
+print(a4)
+print(a5)
+print(a5.5)
+print(a4.5)
+```
