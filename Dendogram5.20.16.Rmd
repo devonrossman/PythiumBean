@@ -635,7 +635,7 @@ print(a)
 
 
 
-#Validation of Model Selection for Seedling Assay RAW
+#Validation of Model Selection for Seedling Assay rtwghttrial
 ```{r, echo=FALSE}
 library(lme4)
 library(lsmeans)
@@ -644,65 +644,144 @@ library(nlme)
 Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA") & !(Y$Trt=="2.5")
 )
-Y3$Trt<-as.factor(Y3$Trt)
-Y3$Trt<-as.factor(Y3$Iso)
-Y3$Trt<-as.factor(Y3$Set)
-Y3$Trt<-as.factor(Y3$Trial)
-fit <- lmer(rtwght ~ Title*Var +(1|Iso/Title)+(1|Trial/Set) + (1|Rep/Trial), data=Y3)
-fit1 <- lmer(rtwght ~ Title*Var + (1|Iso/Title)+(1|Trial/Set), data=Y3)
-fit2 <- lmer(rtwght ~ Title*Var + (1|Iso/Title)+(1|Set), data=Y3)
-fit3 <- lmer(rtwght ~ Title*Var + (1|Iso/Title/Set), data=Y3)
-fit4 <- lmer(rtwght ~ Title*Var + (1|Iso/Title)+ (Rep/Trial/Set), data=Y3)
-a<-anova(fit,fit1,fit2,fit3,fit4)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Trt<-as.character(Y3$Iso)
+Y3$Trt<-as.character(Y3$Set)
+Y3$Trt<-as.character(Y3$Trial)
+fit <- lmer(rtwghttrial ~ Title*Var +(1|Iso/Title)+(1|Trial/Set) + (1|Rep/Trial), data=Y3)
+fit1 <- lmer(rtwghttrial ~ Title*Var + (1|Iso/Title)+(1|Trial/Set), data=Y3)
+fit2 <- lmer(rtwghttrial ~ Title*Var + (1|Iso:Title)+(1|Trial:Set), data=Y3)
+fit3 <- lmer(rtwghttrial ~ Title*Var + (1|Iso/Title/Set), data=Y3)
+fit4 <- lmer(rtwghttrial ~ Title*Var + (1|Iso/Title:Trial/Set), data=Y3)
+fit5 <- lmer(rtwghttrial ~ Title*Var + (1|Iso/Title/Trial:Set), data=Y3)
+a<-anova(fit,fit1,fit2,fit3,fit4,fit5)
 print(a)
 
 #rg1<-ref.grid(m1, cov.reduce = mean, options = #get.lsm.option("ref.grid"), Y3)
-ls1<-lsmeans(fit4, pairwise~Title)
-print(ls1)
+#ls1<-lsmeans(fit4, trt.vs.ctrl1 ~ Title)
+#lsmean1 <- contrast(ls1, levs, ref =("NTC, Rice"))
+#print(ls1)
+#ls1<-lsmeans(rg1, specs="Title", test=)
+
+```
+
+
+#Validation of Model Selection for Seedling Assay rtareatrial
+```{r, echo=FALSE}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(nlme)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA") & !(Y$Trt=="2.5")
+)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Trt<-as.character(Y3$Iso)
+Y3$Trt<-as.character(Y3$Set)
+Y3$Trt<-as.character(Y3$Trial)
+fit <- lmer(rtareatrial ~ Title*Var +(1|Iso/Title)+(1|Trial/Set) + (1|Rep/Trial), data=Y3)
+fit1 <- lmer(rtareatrial ~ Title*Var + (1|Iso/Title)+(1|Trial/Set), data=Y3)
+fit2 <- lmer(rtareatrial ~ Title*Var + (1|Iso:Title)+(1|Trial:Set), data=Y3)
+fit3 <- lmer(rtareatrial ~ Title*Var + (1|Iso/Title/Set), data=Y3)
+fit4 <- lmer(rtareatrial ~ Title*Var + (1|Iso/Title:Trial/Set), data=Y3)
+fit5 <- lmer(rtareatrial ~ Title*Var + (1|Iso/Title) + (1/Set), data=Y3)
+a<-anova(fit,fit1,fit2,fit3,fit4,fit5)
+print(a)
+
+#rg1<-ref.grid(m1, cov.reduce = mean, options = #get.lsm.option("ref.grid"), Y3)
+#ls1<-lsmeans(fit4, trt.vs.ctrl1 ~ Title)
+#lsmean1 <- contrast(ls1, levs, ref =("NTC, Rice"))
+#print(ls1)
+#ls1<-lsmeans(rg1, specs="Title", test=)
+
+```
+
+
+#Validation of Model Selection for Seedling Assay rtlngthtrial
+```{r, echo=FALSE}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(nlme)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA") & !(Y$Trt=="2.5")
+)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Trt<-as.character(Y3$Iso)
+Y3$Trt<-as.character(Y3$Set)
+Y3$Trt<-as.character(Y3$Trial)
+fit <- lmer(rtlngthtrial ~ Title*Var +(1|Iso/Title)+(1|Trial/Set) + (1|Rep/Trial), data=Y3)
+fit1 <- lmer(rtlngthtrial ~ Title*Var + (1|Iso/Title)+(1|Trial/Set), data=Y3)
+fit2 <- lmer(rtlngthtrial ~ Title*Var + (1|Iso:Title)+(1|Trial:Set), data=Y3)
+fit3 <- lmer(rtlngthtrial ~ Title*Var + (1|Iso/Title/Set), data=Y3)
+fit4 <- lmer(rtlngthtrial ~ Title*Var + (Rep/Trial) + (1|Iso/Title/Set), data=Y3)
+fit5 <- lmer(rtlngthtrial ~ Title*Var + (1|Iso/Title/Trial:Set), data=Y3)
+a<-anova(fit,fit1,fit2,fit3,fit4,fit5)
+print(a)
+
+#rg1<-ref.grid(m1, cov.reduce = mean, options = #get.lsm.option("ref.grid"), Y3)
+#ls1<-lsmeans(fit4, trt.vs.ctrl1 ~ Title)
+#lsmean1 <- contrast(ls1, levs, ref =("NTC, Rice"))
+#print(ls1)
+#ls1<-lsmeans(rg1, specs="Title", test=)
+
+```
+
+
+#Validation of Model Selection for Seedling Assay rtarea RAW
+#Best Random Effects Method for Cup Assay Data, tested via R
+```{r, echo=FALSE}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(nlme)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA") & !(Y$Trt=="2.5")
+)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Trt<-as.character(Y3$Iso)
+Y3$Trt<-as.character(Y3$Set)
+Y3$Trt<-as.character(Y3$Trial)
+fit <- lmer(rtarea ~ Title*Var +(1|Iso/Title)+(1|Trial/Set) + (1|Rep/Trial), data=Y3)
+fit1 <- lmer(rtarea ~ Title*Var + (1|Iso/Title)+(1|Trial/Set), data=Y3)
+fit2 <- lmer(rtarea ~ Title*Var + (1|Iso/Title/Trial/Set), data=Y3)
+fit3 <- lmer(rtarea ~ Title*Var + (1|Iso/Title/Set), data=Y3)
+fit4 <- lmer(rtarea ~ Title*Var + (1|Iso/Title) + (1|Set), data=Y3)
+fit5 <- lmer(rtarea ~ Title*Var + (1|Iso/Title), data=Y3)
+a<-anova(fit,fit1,fit2,fit3,fit4,fit5)
+print(a)
+
+#rg1<-ref.grid(m1, cov.reduce = mean, options = #get.lsm.option("ref.grid"), Y3)
+#ls1<-lsmeans(fit4, trt.vs.ctrl1 ~ Title)
+#lsmean1 <- contrast(ls1, levs, ref =("NTC, Rice"))
+#print(ls1)
 #ls1<-lsmeans(rg1, specs="Title", test=)
 
 ```
 
 
 
-#Validation of Model Selection for Seedling Assay RAWrtwght
-``{r, echo=FALSE}
+#Validation of Random Effects Model Selection for Seed Assay Sev
+#Best Random Effects Method for Seed Assay, tested via R
+```{r, echo=FALSE}
 library(lme4)
 library(lsmeans)
 library(pbkrtest)
 library(nlme)
-Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
-Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA")
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
+Y3<-subset(Y, !(Y$Sev=="NA") & !(Y$Trt=="2.5")
 )
-fit <- lme(cbind(rtwght) ~ Title*Var, random = ~1|Iso, data=Y3)
-fit1 <- lme(cbind(rtwght) ~ Title*Var, random = ~1|Set, data=Y3)
-fit2 <- lme(cbind(rtwght) ~ Title*Var, random = ~1|Set/Iso, data=Y3)
-fit3 <- lme(cbind(rtwght) ~ Title*Var, random = ~1|Title/Iso, data=Y3)
-fit4 <- lme(cbind(rtwght) ~ Title*Var, random = ~1|Set/Trial/Title/Iso, data=Y3)
-a<-anova(fit,fit1,fit2, fit3, fit4)
-print(a)
-
-rg1<-ref.grid(m1, cov.reduce = mean, options = get.lsm.option("ref.grid"), Y3)
-ls1<-lsmeans(rg1, specs="Title", test=)
-
-```
-
-
-
-#Validation of Model Selection for Seedling Assay TRIAL
-``{r, echo=FALSE}
-library(lme4)
-library(lsmeans)
-library(pbkrtest)
-library(nlme)
-Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
-Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA")
-)
-fit <- lme(cbind(rtareatrial, rtlngthtrial, rtwghttrial) ~ Title*Var, random= ~1|Iso, data=Y3)
-fit1 <- lme(cbind(rtareatrial, rtlngthtrial, rtwghttrial) ~ Title*Var, random= ~1|Set/Iso, data=Y3)
-fit2 <- lme(cbind(rtareatrial, rtlngthtrial, rtwghttrial) ~ Title*Var, random = ~1|Set, data=Y3)
-fit3 <- lme(cbind(rtareatrial, rtlngthtrial, rtwghttrial) ~ Title*Var, random = ~1|Set/Title, data=Y3)
-fit4 <- lme(cbind(rtwghttrial) ~ Title*Var, random = ~1|Set/Trial/Title/Iso, data=Y3)
-a<-anova(fit,fit1,fit2, fit3, fit4)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Trt<-as.character(Y3$Iso)
+Y3$Trt<-as.character(Y3$Set)
+Y3$Trt<-as.character(Y3$Trial)
+Y3$Temp<-as.character(Y3$Temp)
+fit <- lmer(Sev ~ Title*Var*Temp + (1|Iso/Title) + (1|Rep/Trial/Set), data=Y3)
+fit1 <- lmer(Sev ~ Title*Var*Temp + (1|Iso/Title) + (1|Trial/Set), data=Y3)
+fit2 <- lmer(Sev ~ Title*Var*Temp + (1|Iso/Title) + (1|Set), data=Y3)
+fit3 <- lmer(Sev ~ Title*Var*Temp + (1|Iso/Title/Set), data=Y3)
+fit4 <- lmer(Sev ~ Title*Var*Temp + (1|Iso/Title), data=Y3)
+fit5 <- lmer(Sev ~ Title*Var*Temp + (1|Iso), data=Y3)
+a<-anova(fit,fit1,fit2,fit3,fit4,fit5)
 print(a)
 ```
