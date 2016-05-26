@@ -20,7 +20,7 @@ library(stats)
 rm(list = ls())
 Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 Y3<-subset(Y, !(Y$rtarea=="NA") & !(Y$rtwght=="NA") & !(Y$Var=="Z")
-           )
+)
 Y4<-( ddply(Y3, c("Var", "Title"), summarise,
                N    = length(rtwghttrial),
             meanwght = mean(rtwghttrial, na.rm=TRUE),
@@ -678,6 +678,7 @@ library(lsmeans)
 library(pbkrtest)
 library(nlme)
 library(multcomp)
+library(ggplot2)
 Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA")
 )
@@ -696,6 +697,10 @@ print(a)
 
 ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=1)  ~ Title)
 print(ls1)
+g<-ggplot(fit3@frame, aes(x=Title, y=rtarea))
+g+ geom_boxplot()+
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
+
 #str(ls1)
 #ls2<-summary(ls1)
 #str(ls2)
@@ -728,4 +733,5 @@ fit4 <- lmer(Sev ~ Title*Var*Temp + (1|Iso/Title), data=Y3)
 fit5 <- lmer(Sev ~ Title*Var*Temp + (1|Iso), data=Y3)
 a<-anova(fit,fit1,fit2,fit3,fit4,fit5)
 print(a)
+
 ```
