@@ -89,8 +89,190 @@ chord.co.resid <- chord.ave.cov - chord.v
 rmse(chord.co.resid, chord.v)
 ```
 
+
+#Agglomerative, Hierarchical Clustering
+#Tests based on Lsmeans, Chord for RedHawk Cup Assay
+```{r}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(cluster)
+library(nlme)
+library(ggplot2)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA") & (Y$Var=="RH")
+)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trial<-as.character(Y3$Trial)
+fitwght <- lmer(rtwght ~ Title + (1|Iso/Title/Set), data=Y3)
+fitarea <- lmer(rtarea ~ Title + (1|Iso/Title/Set), data=Y3)
+fitlngth <- lmer(rtlngth ~ Title + (1|Iso/Title/Set), data=Y3)
+fitemerge <- lmer(Emerge ~ Title + (1|Iso/Title/Set), data=Y3)
+ls1<-lsmeans(fitwght, contrast(trt.vs.ctrl, fitwght@frame$Title, ref=1)  ~ Title)
+ls2<-lsmeans(fitarea, contrast(trt.vs.ctrl, fitarea@frame$Title, ref=1)  ~ Title)
+ls3<-lsmeans(fitlngth, contrast(trt.vs.ctrl, fitlngth@frame$Title, ref=1)  ~ Title)
+ls4<-lsmeans(fitemerge, contrast(trt.vs.ctrl, fitemerge@frame$Title, ref=1)  ~ Title)
+wght1<-summary(ls1)
+area1<-summary(ls2)
+lngth1<-summary(ls3)
+emerge1<-summary(ls4)
+Dend<-cbind(wght1$lsmeans$lsmean, area1$lsmeans$lsmean,lngth1$lsmeans$lsmean,emerge1$lsmeans$lsmean)
+Dend<-scale(as.matrix(Dend)) 
+colnames(Dend)<-c("Root Dry Weight", "Root Area", "Root Lenght", "Emergence")
+rownames(Dend)=wght1$lsmeans$Title
+chord = function (s,diag) {
+  # G.Nesslage, B.Maurer
+  # computes chord distance
+  # diag == TRUE returns full distance matrix
+  # diag == FALSE returns distance matrix as dist object
+  n = nrow(s)
+  p <- ncol(s)
+  D = matrix(0,n,n)
+  m <- 1
+  
+  for (i in 1:(n-1)){
+    for (j in (i+1):n){
+      nd <- matrix(0,p,1)
+      dd1 <- matrix(0,p,1)
+      dd2 <- matrix(0,p,1)
+      for (k in 1:p){
+        nd[k,]<- s[i,k]*s[j,k]
+        dd1[k,] <- (s[i,k])^2
+        dd2[k,] <- (s[j,k])^2
+      }
+      D[i,j] <- sqrt(2*(1-(sum(nd)/sqrt(sum(dd1)*
+                                          sum(dd2)))))
+      D[j,i] <- D[i,j]
+    }
+  }
+  
+  if(diag==FALSE) {D=as.dist(D)}
+  return (D)
+}
+
+chord1 <- chord(Dend,diag=FALSE)
+chord.v <- as.vector(chord1)
+label <- rownames(Dend)
+chord.dis <- agnes(chord1, method="average", diss = TRUE) 
+chord.disv<-as.vector(chord.dis)
+# very simple dendrogram
+plot(chord.dis, ask = FALSE, which.plots = 2,labels = label)
+
+#Cophenetic Distance and Correlation
+chord.ave.co <- cophenetic(chord.dis)
+chord.ave.cov <- as.vector(chord.ave.co)
+cor(chord.ave.cov, chord.v)
+plot(y = chord.ave.cov, x = chord.v)
+
+#Mantel Test
+mant1 <- mantel.rtest(chord1, chord.ave.co, nrepet=1000)
+#plot(mant1)
+summary(mant1)
+
+#RMSE
+rmse <- function(x, dis.matrix){
+ r.m.s.e <- 1- (mean(as.vector(x)^2))/var(as.vector(dis.matrix))
+ return(r.m.s.e)
+}
+chord.co.resid <- chord.ave.cov - chord.v
+rmse(chord.co.resid, chord.v)
+```
+
+#Agglomerative, Hierarchical Clustering
+#Tests based on Lsmeans, Chord for Zorro Cup Assay
+```{r}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(cluster)
+library(nlme)
+library(ggplot2)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA") & (Y$Var=="Z")
+)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trial<-as.character(Y3$Trial)
+fitwght <- lmer(rtwght ~ Title + (1|Iso/Title/Set), data=Y3)
+fitarea <- lmer(rtarea ~ Title + (1|Iso/Title/Set), data=Y3)
+fitlngth <- lmer(rtlngth ~ Title + (1|Iso/Title/Set), data=Y3)
+fitemerge <- lmer(Emerge ~ Title + (1|Iso/Title/Set), data=Y3)
+ls1<-lsmeans(fitwght, contrast(trt.vs.ctrl, fitwght@frame$Title, ref=1)  ~ Title)
+ls2<-lsmeans(fitarea, contrast(trt.vs.ctrl, fitarea@frame$Title, ref=1)  ~ Title)
+ls3<-lsmeans(fitlngth, contrast(trt.vs.ctrl, fitlngth@frame$Title, ref=1)  ~ Title)
+ls4<-lsmeans(fitemerge, contrast(trt.vs.ctrl, fitemerge@frame$Title, ref=1)  ~ Title)
+wght1<-summary(ls1)
+area1<-summary(ls2)
+lngth1<-summary(ls3)
+emerge1<-summary(ls4)
+Dend<-cbind(wght1$lsmeans$lsmean, area1$lsmeans$lsmean,lngth1$lsmeans$lsmean,emerge1$lsmeans$lsmean)
+Dend<-scale(as.matrix(Dend)) 
+colnames(Dend)<-c("Root Dry Weight", "Root Area", "Root Lenght", "Emergence")
+rownames(Dend)=wght1$lsmeans$Title
+chord = function (s,diag) {
+  # G.Nesslage, B.Maurer
+  # computes chord distance
+  # diag == TRUE returns full distance matrix
+  # diag == FALSE returns distance matrix as dist object
+  n = nrow(s)
+  p <- ncol(s)
+  D = matrix(0,n,n)
+  m <- 1
+  
+  for (i in 1:(n-1)){
+    for (j in (i+1):n){
+      nd <- matrix(0,p,1)
+      dd1 <- matrix(0,p,1)
+      dd2 <- matrix(0,p,1)
+      for (k in 1:p){
+        nd[k,]<- s[i,k]*s[j,k]
+        dd1[k,] <- (s[i,k])^2
+        dd2[k,] <- (s[j,k])^2
+      }
+      D[i,j] <- sqrt(2*(1-(sum(nd)/sqrt(sum(dd1)*
+                                          sum(dd2)))))
+      D[j,i] <- D[i,j]
+    }
+  }
+  
+  if(diag==FALSE) {D=as.dist(D)}
+  return (D)
+}
+
+chord1 <- chord(Dend,diag=FALSE)
+chord.v <- as.vector(chord1)
+label <- rownames(Dend)
+chord.dis <- agnes(chord1, method="average", diss = TRUE) 
+chord.disv<-as.vector(chord.dis)
+# very simple dendrogram
+plot(chord.dis, ask = FALSE, which.plots = 2,labels = label)
+
+#Cophenetic Distance and Correlation
+chord.ave.co <- cophenetic(chord.dis)
+chord.ave.cov <- as.vector(chord.ave.co)
+cor(chord.ave.cov, chord.v)
+plot(y = chord.ave.cov, x = chord.v)
+
+#Mantel Test
+mant1 <- mantel.rtest(chord1, chord.ave.co, nrepet=1000)
+#plot(mant1)
+summary(mant1)
+
+#RMSE
+rmse <- function(x, dis.matrix){
+ r.m.s.e <- 1- (mean(as.vector(x)^2))/var(as.vector(dis.matrix))
+ return(r.m.s.e)
+}
+chord.co.resid <- chord.ave.cov - chord.v
+rmse(chord.co.resid, chord.v)
+```
+
+
 Agglomerative hierarchical clustering - non-Chord template
-```{r, echo=FALSE}
+``{r, echo=FALSE}
 library(scales)
 library(ggplot2)
 library(plyr)
@@ -99,17 +281,29 @@ library(cluster)
 library(ade4)
 library(stats)
 rm(list = ls())
-#install.packages("ade4")
 Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
-Y3<-subset(Y, !(Y$rtarea=="NA") & !(Y$rtwght=="NA") & !(Y$Var=="RH"))
-Y4<-( ddply(Y3, c("Var", "Title"), summarise,
-               N    = length(rtwghttrial),
-            meanwght = mean(rtwghttrial, na.rm=TRUE),
-            meanlngth = mean(rtlngthtrial, na.rm=TRUE),
-            meanarea = mean(rtareatrial, na.rm=TRUE),
-            meanemerge = mean(emergetrial, na.rm=TRUE)))
-Dend<-scale(as.matrix(Y4 [,c("meanwght", "meanlngth", "meanarea", "meanemerge")]))    
-rownames(Dend)=Y4$Title
+Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA")
+)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trial<-as.character(Y3$Trial)
+fitwght <- lmer(rtwghttrial ~ Title*Var + (1|Iso/Title/Set), data=Y3)
+fitarea <- lmer(rtareatrial ~ Title*Var + (1|Iso/Title/Set), data=Y3)
+fitlngth <- lmer(rtlngthtrial ~ Title*Var + (1|Iso/Title/Set), data=Y3)
+fitemerge <- lmer(emergetrial ~ Title*Var + (1|Iso/Title/Set), data=Y3)
+ls1<-lsmeans(fitwght, contrast(trt.vs.ctrl, fitwght@frame$Title, ref=1)  ~ Title:Var)
+ls2<-lsmeans(fitarea, contrast(trt.vs.ctrl, fitarea@frame$Title, ref=1)  ~ Title:Var)
+ls3<-lsmeans(fitlngth, contrast(trt.vs.ctrl, fitlngth@frame$Title, ref=1)  ~ Title:Var)
+ls4<-lsmeans(fitemerge, contrast(trt.vs.ctrl, fitemerge@frame$Title, ref=1)  ~ Title:Var)
+wght1<-summary(ls1)
+area1<-summary(ls2)
+lngth1<-summary(ls3)
+emerge1<-summary(ls4)
+Dend<-cbind(wght1$lsmeans$lsmean, area1$lsmeans$lsmean,lngth1$lsmeans$lsmean,emerge1$lsmeans$lsmean)
+Dend<-as.matrix(Dend) 
+colnames(Dend)<-c("Root Dry Weight", "Root Area", "Root Lenght", "Emergence")
+rownames(Dend)=wght1$lsmeans$Title
 bray <- (dist(Dend, method = "euclidean", diag = FALSE, upper = FALSE))
 bray.v<-as.vector(bray)
 bray.dis <- agnes(bray, method="average", diss = TRUE) 
@@ -139,7 +333,7 @@ rmse(bray.co.resid, bray.v)
 
 #Divisive Clustering
 Raw Data Relative to Trial
-```{r}
+``{r}
 library(plyr)
 rm(list = ls())
 Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
@@ -564,9 +758,9 @@ Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA") & !(Y$Trt=="2.5")
 )
 Y3$Trt<-as.character(Y3$Trt)
-Y3$Trt<-as.character(Y3$Iso)
-Y3$Trt<-as.character(Y3$Set)
-Y3$Trt<-as.character(Y3$Trial)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trial<-as.character(Y3$Trial)
 fit <- lmer(rtwghttrial ~ Title*Var +(1|Iso/Title)+(1|Trial/Set) + (1|Rep/Trial), data=Y3)
 fit1 <- lmer(rtwghttrial ~ Title*Var + (1|Iso/Title)+(1|Trial/Set), data=Y3)
 fit2 <- lmer(rtwghttrial ~ Title*Var + (1|Iso/Title) + (Trial:Set), data=Y3)
@@ -595,9 +789,9 @@ Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA") & !(Y$Trt=="2.5")
 )
 Y3$Trt<-as.character(Y3$Trt)
-Y3$Trt<-as.character(Y3$Iso)
-Y3$Trt<-as.character(Y3$Set)
-Y3$Trt<-as.character(Y3$Trial)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trial<-as.character(Y3$Trial)
 fit <- lmer(rtareatrial ~ Title*Var +(1|Iso/Title)+(1|Trial/Set) + (1|Rep/Trial), data=Y3)
 fit1 <- lmer(rtareatrial ~ Title*Var + (1|Iso/Title)+(1|Trial/Set), data=Y3)
 fit2 <- lmer(rtareatrial ~ Title*Var + (1|Iso/Title) + (Trial:Set), data=Y3)
@@ -626,9 +820,9 @@ Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA") & !(Y$Trt=="2.5")
 )
 Y3$Trt<-as.character(Y3$Trt)
-Y3$Trt<-as.character(Y3$Iso)
-Y3$Trt<-as.character(Y3$Set)
-Y3$Trt<-as.character(Y3$Trial)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trial<-as.character(Y3$Trial)
 fit <- lmer(rtlngthtrial ~ Title*Var +(1|Iso/Title)+(1|Trial/Set) + (1|Rep/Trial), data=Y3)
 fit1 <- lmer(rtlngthtrial ~ Title*Var + (1|Iso/Title)+(1|Trial/Set), data=Y3)
 fit2 <- lmer(rtlngthtrial ~ Title*Var + (1|Iso/Title) + (Trial:Set), data=Y3)
@@ -660,9 +854,9 @@ Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA")
 )
 Y3$Trt<-as.character(Y3$Trt)
-Y3$Trt<-as.character(Y3$Iso)
-Y3$Trt<-as.character(Y3$Set)
-Y3$Trt<-as.character(Y3$Trial)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trial<-as.character(Y3$Trial)
 fit <- lmer(rtarea ~ Title*Var +(1|Iso/Title)+(1|Trial/Set) + (1|Rep/Trial), data=Y3)
 fit1 <- lmer(rtarea ~ Title*Var + (1|Iso/Title)+(1|Trial/Set), data=Y3)
 fit2 <- lmer(rtarea ~ Title*Var + (1|Iso/Title) + (1|Trial:Set), data=Y3)
@@ -692,22 +886,20 @@ Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA")
 )
 Y3$Trt<-as.character(Y3$Trt)
-Y3$Trt<-as.character(Y3$Iso)
-Y3$Trt<-as.character(Y3$Set)
-Y3$Trt<-as.character(Y3$Trial)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trial<-as.character(Y3$Trial)
 fit3 <- lmer(rtarea ~ Title*Var + (1|Iso/Title/Set), data=Y3)
-ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=1)  ~ Title)
+ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=1)  ~ Title:Var)
 lsmean1<-summary(ls1)
 print(lsmean1)
 limits<-aes(ymin=lsmean-(1.96*SE), ymax=lsmean+(1.96*SE))
 g<-ggplot(lsmean1$lsmeans, aes(x=Title, y=lsmean))
 g+ geom_point(aes(x=reorder(Title, -lsmean)))+
   theme_light()+
+  facet_grid(Var~.)+
 geom_errorbar(limits, width=0.2)+labs(y="Mean Root Area\n(in square cm)", x="")+
   theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
-  
-  
-
 ```
 
 #RtLngth Graph, Ordered
@@ -721,17 +913,18 @@ Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA")
 )
 Y3$Trt<-as.character(Y3$Trt)
-Y3$Trt<-as.character(Y3$Iso)
-Y3$Trt<-as.character(Y3$Set)
-Y3$Trt<-as.character(Y3$Trial)
-fit3 <- lmer(rtarea ~ Title*Var + (1|Iso/Title/Set), data=Y3)
-ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=1)  ~ Title)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trial<-as.character(Y3$Trial)
+fit3 <- lmer(rtlngth ~ Title*Var + (1|Iso/Title/Set), data=Y3)
+ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=1)  ~ Title:Var)
 lsmean1<-summary(ls1)
 print(lsmean1)
 limits<-aes(ymin=lsmean-(1.96*SE), ymax=lsmean+(1.96*SE))
 g<-ggplot(lsmean1$lsmeans, aes(x=Title, y=lsmean))
 g+ geom_point(aes(x=reorder(Title, -lsmean)))+
   theme_light()+
+  facet_grid(Var~.)+
 geom_errorbar(limits, width=0.2)+labs(y="Mean Root Length\n(in cm)", x="")+
   theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
 ```
@@ -748,20 +941,52 @@ Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA")
 )
 Y3$Trt<-as.character(Y3$Trt)
-Y3$Trt<-as.character(Y3$Iso)
-Y3$Trt<-as.character(Y3$Set)
-Y3$Trt<-as.character(Y3$Trial)
-fit3 <- lmer(rtarea ~ Title*Var + (1|Iso/Title/Set), data=Y3)
-ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=1)  ~ Title)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trial<-as.character(Y3$Trial)
+fit3 <- lmer(rtwght ~ Title*Var + (1|Iso/Title/Set), data=Y3)
+ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=1)  ~ Title:Var)
 lsmean1<-summary(ls1)
 print(lsmean1)
 limits<-aes(ymin=lsmean-(1.96*SE), ymax=lsmean+(1.96*SE))
 g<-ggplot(lsmean1$lsmeans, aes(x=Title, y=lsmean))
 g+ geom_point(aes(x=reorder(Title, -lsmean)))+
   theme_light()+
+  facet_grid(Var~.)+
 geom_errorbar(limits, width=0.2)+labs(y="Mean Root Dry Weight\n(in g)", x="")+
   theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
 ```
+
+
+#Sev Graph, Ordered (By Var, Temp)
+```{r, echo=FALSE}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(nlme)
+library(ggplot2)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
+Y3<-subset(Y, !(Y$Sev=="NA")
+)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trial<-as.character(Y3$Trial)
+Y3$Temp<-as.character(Y3$Temp)
+fit3 <- lmer(Sev ~ Title*Var*Temp + (1|Iso/Title/Set), data=Y3)
+ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=1)  ~ Title:Var:Temp)
+lsmean1<-summary(ls1)
+#print(lsmean1)
+limits<-aes(ymin=lsmean-(1.96*SE), ymax=lsmean+(1.96*SE))
+g<-ggplot(lsmean1$lsmeans, aes(x=Title, y=lsmean, color=Temp) )
+g+ geom_point(aes(x=reorder(Title, -lsmean), color=Temp), position=position_dodge(width=0.5))+
+  theme_light()+
+  facet_grid(Var~.)+
+geom_errorbar(limits, width=0.2, position=position_dodge(width=0.5))+
+  labs(y="Mean Root Dry Weight\n(in g)", x="")+
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
+```
+
 
 #Validation of Random Effects Model Selection for Seed Assay Sev
 #Best Random Effects Method for Seed Assay, tested via R
