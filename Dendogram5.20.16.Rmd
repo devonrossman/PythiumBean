@@ -142,7 +142,7 @@ Raw Data Relative to Trial
 ```{r}
 library(plyr)
 rm(list = ls())
-Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCup.csv"))
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 Y3<-subset(Y, !(Y$rtarea=="NA") & !(Y$rtwght=="NA"))
 Y4<-( ddply(Y3, c("Title"), summarise,
                N    = length(rtwght),
@@ -156,27 +156,6 @@ k.pot$cluster
 kk<-as.matrix(k.pot$cluster)
 
 ```   
-
-#Heat Map by Isolates
-```{r}
-library(pheatmap)
-library(plyr)
-Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
-Y3<-subset(Y, !(Y$rtarea=="NA") & !(Y$rtwght=="NA") & (Y$Var=="RH"))
-Y3$tisolate<-paste(Y3$Title,Y3$Trt)
-Y4<-( ddply(Y3, c("Var", "tisolate"), summarise,
-               N    = length(rtwght),
-            meanwght = mean(rtwghttrial, na.rm=TRUE),
-            meanlngth = mean(rtlngthtrial, na.rm=TRUE),
-            meanarea = mean(rtareatrial, na.rm=TRUE), meanemerge = mean(emergetrial, na.rm=TRUE)))
-stuff<-cbind(Y4$meanwght, Y4$meanlngth, Y4$meanarea, Y4$meanemerge)
-rownames(stuff)<-Y4$tisolate
-colnames(stuff)<-c("Root Dry Weight", "Root Length", "Root Area", "Emergence")
-pheatmap(stuff, show_rownames = TRUE, show_colnames = TRUE, fontsize_row=9,
-         #cluster_rows=hc.rows, 
-         clustering_method="average")
-
-```
 
 
 #Chord Cup Assay Virulence cluster, across both Varieties
@@ -345,14 +324,12 @@ pheatmap(stuff, show_rownames = TRUE, show_colnames = TRUE,
 
 
 
-
-
 Seed Rot Zorro, two temperatures
 ```{r}
 library(pheatmap)
 library(plyr)
 rm(list = ls())
-Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRot.csv"))
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
 Y20<-subset(Y, #!(Y$SevPercent=="NA") & 
               (Y$Var=="Z") & Y$Temp=="20")
 Y26<-subset(Y, #!(Y$SevPercent=="NA") & 
@@ -378,7 +355,7 @@ Seed Rot Red Hawk, two temperatures
 library(pheatmap)
 library(plyr)
 rm(list = ls())
-Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRot.csv"))
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
 Y20<-subset(Y, #!(Y$SevPercent=="NA") & 
               (Y$Var=="RH") & Y$Temp=="20")
 Y26<-subset(Y, #!(Y$SevPercent=="NA") & 
@@ -410,7 +387,7 @@ library(ade4)
 library(stats)
 library(pheatmap)
 rm(list = ls())
-Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCup.csv"))
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 Y3<-subset(Y, !(Y$rtarea=="NA") & !(Y$rtwght=="NA") & !(Y$Var=="Z"))
 Y4<-( ddply(Y3, c("Var", "Title"), summarise,
                N    = length(rtwghttrial),
@@ -695,11 +672,6 @@ fit5 <- lmer(rtarea ~ Title*Var + (1|Iso/Title), data=Y3)
 a<-anova(fit,fit1,fit2,fit3,fit4,fit5)
 print(a)
 
-ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=1)  ~ Title)
-print(ls1)
-g<-ggplot(fit3@frame, aes(x=Title, y=rtarea))
-g+ geom_boxplot()+
-  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
 
 #str(ls1)
 #ls2<-summary(ls1)
@@ -709,6 +681,87 @@ g+ geom_boxplot()+
 ```
 
 
+#RtArea Graph, Ordered
+```{r, echo=FALSE}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(nlme)
+library(ggplot2)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA")
+)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Trt<-as.character(Y3$Iso)
+Y3$Trt<-as.character(Y3$Set)
+Y3$Trt<-as.character(Y3$Trial)
+fit3 <- lmer(rtarea ~ Title*Var + (1|Iso/Title/Set), data=Y3)
+ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=1)  ~ Title)
+lsmean1<-summary(ls1)
+print(lsmean1)
+limits<-aes(ymin=lsmean-(1.96*SE), ymax=lsmean+(1.96*SE))
+g<-ggplot(lsmean1$lsmeans, aes(x=Title, y=lsmean))
+g+ geom_point(aes(x=reorder(Title, -lsmean)))+
+  theme_light()+
+geom_errorbar(limits, width=0.2)+labs(y="Mean Root Area\n(in square cm)", x="")+
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
+  
+  
+
+```
+
+#RtLngth Graph, Ordered
+```{r, echo=FALSE}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(nlme)
+library(ggplot2)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA")
+)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Trt<-as.character(Y3$Iso)
+Y3$Trt<-as.character(Y3$Set)
+Y3$Trt<-as.character(Y3$Trial)
+fit3 <- lmer(rtarea ~ Title*Var + (1|Iso/Title/Set), data=Y3)
+ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=1)  ~ Title)
+lsmean1<-summary(ls1)
+print(lsmean1)
+limits<-aes(ymin=lsmean-(1.96*SE), ymax=lsmean+(1.96*SE))
+g<-ggplot(lsmean1$lsmeans, aes(x=Title, y=lsmean))
+g+ geom_point(aes(x=reorder(Title, -lsmean)))+
+  theme_light()+
+geom_errorbar(limits, width=0.2)+labs(y="Mean Root Length\n(in cm)", x="")+
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
+```
+
+
+#RtWght Graph, Ordered
+```{r, echo=FALSE}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(nlme)
+library(ggplot2)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA")
+)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Trt<-as.character(Y3$Iso)
+Y3$Trt<-as.character(Y3$Set)
+Y3$Trt<-as.character(Y3$Trial)
+fit3 <- lmer(rtarea ~ Title*Var + (1|Iso/Title/Set), data=Y3)
+ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=1)  ~ Title)
+lsmean1<-summary(ls1)
+print(lsmean1)
+limits<-aes(ymin=lsmean-(1.96*SE), ymax=lsmean+(1.96*SE))
+g<-ggplot(lsmean1$lsmeans, aes(x=Title, y=lsmean))
+g+ geom_point(aes(x=reorder(Title, -lsmean)))+
+  theme_light()+
+geom_errorbar(limits, width=0.2)+labs(y="Mean Root Dry Weight\n(in g)", x="")+
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
+```
 
 #Validation of Random Effects Model Selection for Seed Assay Sev
 #Best Random Effects Method for Seed Assay, tested via R
