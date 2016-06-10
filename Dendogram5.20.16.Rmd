@@ -197,6 +197,7 @@ library(pbkrtest)
 library(cluster)
 library(nlme)
 library(ggplot2)
+library(pheatmap)
 Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA") & (Y$Var=="RH")
 )
@@ -280,7 +281,8 @@ rmse(chord.co.resid, chord.v)
 hc.rows<-hclust(chord.dis$diss)
 pheatmap(Dend, show_rownames = TRUE, show_colnames = TRUE,
          cluster_rows=hc.rows,
-         clustering_method = "average")
+         clustering_method = "average",
+fontsize_row=10)
 ```
 
 #Agglomerative, Hierarchical Clustering
@@ -376,7 +378,8 @@ rmse(chord.co.resid, chord.v)
 hc.rows<-hclust(chord.dis$diss)
 pheatmap(Dend, show_rownames = TRUE, show_colnames = TRUE,
          cluster_rows=hc.rows,
-         clustering_method = "average")
+         clustering_method = "average",
+fontsize_row=10)
 
 ```
 
@@ -781,7 +784,7 @@ g+ geom_point(aes(x=reorder(Title, -lsmean), color=Temp), position=position_dodg
   theme_light()+
   facet_grid(Var~.)+
 geom_errorbar(limits, width=0.2, position=position_dodge(width=0.5))+
-  labs(y="Mean Root Dry Weight\n(in g)", x="")+
+  labs(y="Disease Severity Index", x="")+
   theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
 ```
 
