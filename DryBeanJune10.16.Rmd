@@ -385,7 +385,7 @@ g+ geom_point(aes(x=reorder(Title, -lsmean), color=Temp), position=position_dodg
   facet_grid(Var~.)+
 geom_errorbar(limits, width=0.2, position=position_dodge(width=0.5))+
   labs(y="Disease Severity Index", x="")+
-  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5), legend.text=element_text(angle=90), legend.text.align=0.5, legend.title=element_text(angle=90), legend.title.align=0.5, legend.position="bottom")
 ```
 
 
