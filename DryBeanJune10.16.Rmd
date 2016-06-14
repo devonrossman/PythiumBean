@@ -387,3 +387,34 @@ geom_errorbar(limits, width=0.2, position=position_dodge(width=0.5))+
   labs(y="Disease Severity Index", x="")+
   theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
 ```
+
+
+Assay Comparison
+```{r, echo=FALSE}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(nlme)
+library(ggplot2)
+library(graphics)
+rm(list = ls())
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/Assay.csv"))
+par(mfrow=c(2,4))
+plot(Y$Emerge, (Y$Sev20), ylab="Disease Severity Index \n 20 C", xlab="Emergence %")
+plot(Y$RDW, (Y$Sev20), ylab="Disease Severity Index \n 20 C", xlab="Root Dry Weight \n (g)")
+plot(Y$RA, (Y$Sev20), ylab="Disease Severity Index \n 20 C", xlab="Root Area \n (sq. cm)")
+plot(Y$RL, (Y$Sev20), ylab="Disease Severity Index \n 20 C", xlab="Root Length \n (cm)")
+plot(Y$Emerge, (Y$Sev26), ylab="Disease Severity Index \n 26 C", xlab="Emergence %")
+plot(Y$RDW, (Y$Sev26), ylab="Disease Severity Index \n 26 C", xlab="Root Dry Weight \n (g)")
+plot(Y$RA, (Y$Sev26), ylab="Disease Severity Index \n 26 C", xlab="Root Area \n (sq. cm)")
+plot(Y$RL, (Y$Sev26), ylab="Disease Severity Index \n 26 C", xlab="Root Length \n (cm)")
+cor(Y$RL, (Y$Sev20))
+cor(Y$RA, (Y$Sev20))
+cor(Y$RL, (Y$Sev20))
+cor(Y$Emerge, (Y$Sev20))
+cor(Y$RL, (Y$Sev26))
+cor(Y$RA, (Y$Sev26))
+cor(Y$RL, (Y$Sev26))
+cor(Y$Emerge, (Y$Sev26))
+
+```
