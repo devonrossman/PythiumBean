@@ -348,14 +348,45 @@ Y3$Trial<-as.character(Y3$Trial)
 fit3 <- lmer(rtwght ~ Title*Var + (1|Iso/Title/Set), data=Y3)
 ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title:Var)
 lsmean1<-summary(ls1)
-print(lsmean1)
 limits<-aes(ymin=lsmean-(1.96*SE), ymax=lsmean+(1.96*SE))
 g<-ggplot(lsmean1$lsmeans, aes(x=Title, y=lsmean))
-g+ geom_point(aes(x=reorder(Title, -lsmean)))+
+g+ geom_point(aes(x=reorder(Title, -lsmean), colour=(lsmean+1.96*SE)<0.4))+
   theme_light()+
   facet_grid(Var~.)+
-geom_errorbar(limits, width=0.2)+labs(y="Mean Root Dry Weight\n(in g)", x="")+
-  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
+geom_errorbar(limits, width=0.15, color="dark grey")+ylab(expression(paste('Mean Root Area ', (cm^{2})))) +
+  #labs(y="Mean Root Area \n(in cm2)", x="")+
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))+
+  scale_colour_manual(name = 'Significant', values = setNames(c('red','green'), c(T, F)))
+
+```
+
+
+#RtArea Graph, Ordered
+```{r, echo=FALSE}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(nlme)
+library(ggplot2)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA")
+)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trial<-as.character(Y3$Trial)
+fit3 <- lmer(rtarea ~ Title*Var + (1|Iso/Title/Set), data=Y3)
+ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title:Var)
+lsmean1<-summary(ls1)
+limits<-aes(ymin=lsmean-(1.96*SE), ymax=lsmean+(1.96*SE))
+g<-ggplot(lsmean1$lsmeans, aes(x=Title, y=lsmean))
+g+ geom_point(aes(x=reorder(Title, -lsmean), colour=(lsmean+1.96*SE)<10.5))+
+  theme_light()+
+  facet_grid(Var~.)+
+geom_errorbar(limits, width=0.15, color="dark grey")+ylab(expression(paste('Mean Root Area ', (cm^{2})))) +
+  #labs(y="Mean Root Area \n(in cm2)", x="")+
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))+
+  scale_colour_manual(name = 'Significant', values = setNames(c('red','green'), c(T, F)))
 ```
 
 
@@ -375,17 +406,17 @@ Y3$Set<-as.character(Y3$Set)
 Y3$Trial<-as.character(Y3$Trial)
 Y3$Temp<-as.character(Y3$Temp)
 fit3 <- lmer(Sev ~ Title*Var*Temp + (1|Iso/Title/Set), data=Y3)
-ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title:Var:Temp)
+ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title:Temp)
 lsmean1<-summary(ls1)
 #print(lsmean1)
 limits<-aes(ymin=lsmean-(1.96*SE), ymax=lsmean+(1.96*SE))
-g<-ggplot(lsmean1$lsmeans, aes(x=Title, y=lsmean, color=Temp) )
-g+ geom_point(aes(x=reorder(Title, -lsmean), color=Temp), position=position_dodge(width=0.5))+
+g<-ggplot(lsmean1$lsmeans, aes(x=Title, y=lsmean, shape=Temp, color=lsmean-(SE*1.96)>0.16))
+g+ geom_point(aes(x=reorder(Title, -lsmean), shape=Temp), position=position_dodge(width=0.5), size=2)+
   theme_light()+
-  facet_grid(Var~.)+
+  #facet_grid(Var~.)+
 geom_errorbar(limits, width=0.2, position=position_dodge(width=0.5))+
   labs(y="Disease Severity Index", x="")+
-  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5), legend.text=element_text(angle=90), legend.text.align=0.5, legend.title=element_text(angle=90), legend.title.align=0.5, legend.position="bottom", axis.text.y=element_text(angle=90, hjust=0.5, vjust=1))
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5), legend.text=element_text(angle=90), legend.text.align=0.5, legend.title=element_text(angle=90), legend.title.align=0.5, legend.position="top", axis.text.y=element_text(angle=0, hjust=0.5, vjust=1), legend.text.align=0.5) + scale_colour_manual(name = 'p<0.05', values = setNames(c('black','dark grey'), c(T, F)))
 ```
 
 
