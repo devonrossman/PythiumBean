@@ -128,7 +128,7 @@ lngth1<-summary(ls3)
 emerge1<-summary(ls4)
 Dend<-cbind(wght1$lsmeans$lsmean, area1$lsmeans$lsmean,lngth1$lsmeans$lsmean,emerge1$lsmeans$lsmean)
 Dend<-scale(as.matrix(Dend)) 
-colnames(Dend)<-c("Root Dry Weight", "Root Area", "Root Lenght", "Emergence")
+colnames(Dend)<-c("Root Dry Weight", "Root Area", "Root Length", "Emergence")
 rownames(Dend)=wght1$lsmeans$Title
 chord = function (s,diag) {
   # G.Nesslage, B.Maurer
@@ -397,6 +397,7 @@ library(lsmeans)
 library(pbkrtest)
 library(nlme)
 library(ggplot2)
+library(plyr)
 Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
 Y3<-subset(Y, !(Y$Sev=="NA")
 )
@@ -405,18 +406,24 @@ Y3$Iso<-as.character(Y3$Iso)
 Y3$Set<-as.character(Y3$Set)
 Y3$Trial<-as.character(Y3$Trial)
 Y3$Temp<-as.character(Y3$Temp)
+
+Y4<-( ddply(Y3, c("Title", "Temp"), summarise,
+               N    = length(Sev),
+            Sevsd = sd(Sev, na.rm=TRUE),
+            Sevse = Sevsd / sqrt(N)))
 fit3 <- lmer(Sev ~ Title*Var*Temp + (1|Iso/Title/Set), data=Y3)
 ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title:Temp)
 lsmean1<-summary(ls1)
 #print(lsmean1)
-limits<-aes(ymin=lsmean-(1.96*SE), ymax=lsmean+(1.96*SE))
+limits<-aes(ymin=lsmean1$lsmeans$lsmean-(1.96*Y4$Sevse), ymax=lsmean1$lsmeans$lsmean+(1.96*Y4$Sevse))
 g<-ggplot(lsmean1$lsmeans, aes(x=Title, y=lsmean, shape=Temp, color=lsmean-(SE*1.96)>0.16))
-g+ geom_point(aes(x=reorder(Title, -lsmean), shape=Temp), position=position_dodge(width=0.5), size=2)+
+g+ geom_point(aes(x=reorder(Title, -lsmean), shape=Temp), position=position_dodge(width=0.5), size=4)+
   theme_light()+
   #facet_grid(Var~.)+
-geom_errorbar(limits, width=0.2, position=position_dodge(width=0.5))+
+geom_errorbar(limits, width=0.3, position=position_dodge(width=0.5))+
   labs(y="Disease Severity Index", x="")+
-  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5), legend.text=element_text(angle=90), legend.text.align=0.5, legend.title=element_text(angle=90), legend.title.align=0.5, legend.position="top", axis.text.y=element_text(angle=0, hjust=0.5, vjust=1), legend.text.align=0.5) + scale_colour_manual(name = 'p<0.05', values = setNames(c('black','dark grey'), c(T, F)))
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5, color="black", size=18),
+        axis.title.y=element_text(size=22), legend.text=element_text(angle=0, color="black", size=22), legend.text.align=0.5, legend.title=element_text(angle=0, size=24), legend.title.align=0.5, legend.position="right", axis.text.y=element_text(angle=90, hjust=0.5, vjust=1, color="black", size=18), legend.text.align=0.5) + scale_colour_manual(name = 'p<0.05', values = setNames(c('red','dark green'), c(T, F)))
 ```
 
 
@@ -447,5 +454,31 @@ cor(Y$RL, (Y$Sev26))
 cor(Y$RA, (Y$Sev26))
 cor(Y$RL, (Y$Sev26))
 cor(Y$Emerge, (Y$Sev26))
+
+```
+
+Model Selection Disease Severity
+```{r, echo=FALSE}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(nlme)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
+Y3<-subset(Y, !(Y$Sev=="NA") &(Y$Var=="Z") & !(Y$Trt=="2.5")
+)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trial<-as.character(Y3$Trial)
+fit1 <- lmer(Sev ~ Title*Temp + (1| Iso/Title/Trial/Set), data=Y3)
+fit2 <- lmer(Sev ~ Title*Temp + (1|Iso/Title/Set), data=Y3)
+fit3 <- lmer(Sev ~ Title*Temp + (1|Iso/Title/Trial), data=Y3)
+fit4 <- lmer(Sev ~ Title*Temp + (1|Iso/Title), data=Y3)
+a<-anova(fit1,fit2,fit3,fit4)
+print(a)
+
+
+
+
 
 ```
