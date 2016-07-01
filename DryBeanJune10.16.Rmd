@@ -411,7 +411,8 @@ Y4<-( ddply(Y3, c("Title", "Temp"), summarise,
                N    = length(Sev),
             Sevsd = sd(Sev, na.rm=TRUE),
             Sevse = Sevsd / sqrt(N)))
-fit3 <- lmer(Sev ~ Title*Var*Temp + (1|Iso/Title/Set), data=Y3)
+fit3 <- lmer(Sev ~ Title*Var*Temp 
+             + (1|Iso/Title/Set), data=Y3)
 ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title:Temp)
 lsmean1<-summary(ls1)
 #print(lsmean1)
@@ -464,14 +465,15 @@ library(lsmeans)
 library(pbkrtest)
 library(nlme)
 Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
-Y3<-subset(Y, !(Y$Sev=="NA") &(Y$Var=="Z") & !(Y$Trt=="2.5")
+Y3<-subset(Y, !(Y$Sev=="NA") & #(Y$Var=="Z") & 
+             !(Y$Trt=="2.5")
 )
 Y3$Trt<-as.character(Y3$Trt)
 Y3$Iso<-as.character(Y3$Iso)
 Y3$Set<-as.character(Y3$Set)
 Y3$Trial<-as.character(Y3$Trial)
-fit1 <- lmer(Sev ~ Title*Temp + (1| Iso/Title/Trial/Set), data=Y3)
-fit2 <- lmer(Sev ~ Title*Temp + (1|Iso/Title/Set), data=Y3)
+fit1 <- lmer(Sev ~ Title*Temp*Var - Title:Temp:Var + (1| Iso/Title/Trial/Set), data=Y3)
+fit2 <- lmer(Sev ~ Title*Temp*Var - Title:Temp:Var + (1|Iso/Title/Set), data=Y3)
 fit3 <- lmer(Sev ~ Title*Temp + (1|Iso/Title/Trial), data=Y3)
 fit4 <- lmer(Sev ~ Title*Temp + (1|Iso/Title), data=Y3)
 a<-anova(fit1,fit2,fit3,fit4)
