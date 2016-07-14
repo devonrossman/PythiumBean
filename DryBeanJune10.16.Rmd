@@ -472,11 +472,11 @@ Y3$Trt<-as.character(Y3$Trt)
 Y3$Iso<-as.character(Y3$Iso)
 Y3$Set<-as.character(Y3$Set)
 Y3$Trial<-as.character(Y3$Trial)
-fit1 <- lmer(Sev ~ Title*Temp*Var - Title:Temp:Var + (1| Iso/Title/Trial/Set), data=Y3)
+fit1 <- lmer(Sev ~ Title*Temp*Var - Title:Temp:Var + (1| Iso/(Title:Trial:Set)), data=Y3)
 fit2 <- lmer(Sev ~ Title*Temp*Var - Title:Temp:Var + (1|Iso/Title/Set), data=Y3)
 fit3 <- lmer(Sev ~ Title*Temp + (1|Iso/Title/Trial), data=Y3)
 fit4 <- lmer(Sev ~ Title*Temp + (1|Iso/Title), data=Y3)
-a<-anova(fit1,fit2,fit3,fit4)
+a<-anova(fit1,fit2)
 print(a)
 
 
