@@ -185,59 +185,6 @@ fontsize_row=8)
 ```
 
 
-Seed Rot Zorro, two temperatures
-```{r}
-library(pheatmap)
-library(plyr)
-rm(list = ls())
-Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
-Y20<-subset(Y, #!(Y$SevPercent=="NA") & 
-              (Y$Var=="Z") & Y$Temp=="20")
-Y26<-subset(Y, #!(Y$SevPercent=="NA") & 
-              (Y$Var=="Z") & Y$Temp=="26")
-Sev26<-Y26$SevPercent
-Y3<-cbind(Y20, Sev26)
-Y3$tisolate<-paste(Y3$Title,Y3$Trt)
-Y4<-( ddply(Y3, c("Var", "Title"), summarise,
-               N    = length(SevPercent),
-            sev20 = mean(SevPercent, na.rm=TRUE),
-            sev26 = mean(Sev26, na.rm=TRUE)))
-stuff<-as.data.frame(cbind(Y4$sev20, Y4$sev26))
-rownames(stuff)<-Y4$Title
-colnames(stuff)<-c("Severity 20C", "Severity 26C")
-pheatmap(stuff, show_rownames = TRUE, show_colnames = TRUE,
-         #cluster_rows=hc.rows, 
-         clustering_method="average")
-
-```
-
-Seed Rot Red Hawk, two temperatures
-```{r}
-library(pheatmap)
-library(plyr)
-rm(list = ls())
-Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
-Y20<-subset(Y, #!(Y$SevPercent=="NA") & 
-              (Y$Var=="RH") & Y$Temp=="20")
-Y26<-subset(Y, #!(Y$SevPercent=="NA") & 
-              (Y$Var=="RH") & Y$Temp=="26")
-Sev26<-Y26$SevPercent
-Y3<-cbind(Y20, Sev26)
-Y3$tisolate<-paste(Y3$Title,Y3$Trt)
-Y4<-( ddply(Y3, c("Var", "Title"), summarise,
-               N    = length(SevPercent),
-            sev20 = mean(SevPercent, na.rm=TRUE),
-            sev26 = mean(Sev26, na.rm=TRUE)))
-stuff<-as.data.frame(cbind(Y4$sev20, Y4$sev26))
-rownames(stuff)<-Y4$Title
-colnames(stuff)<-c("Severity 20C", "Severity 26C")
-pheatmap(stuff, show_rownames = TRUE, show_colnames = TRUE,
-         #cluster_rows=hc.rows, 
-         clustering_method="average")
-
-```
-
-
 #Virulence-sorted Severity by Temperature - Treatment
 ```{r, echo=FALSE}
 library(scales)
@@ -523,30 +470,4 @@ cor(Y$RL, (Y$Sev26))
 cor(Y$Emerge, (Y$Sev26))
 
 ```
-
-Model Selection Disease Severity
-```{r, echo=FALSE}
-library(lme4)
-library(lsmeans)
-library(pbkrtest)
-library(nlme)
-Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
-Y3<-subset(Y, !(Y$Sev=="NA") & #(Y$Var=="Z") & 
-             !(Y$Trt=="2.5")
-)
-Y3$Trt<-as.character(Y3$Trt)
-Y3$Iso<-as.character(Y3$Iso)
-Y3$Set<-as.character(Y3$Set)
-Y3$Trial<-as.character(Y3$Trial)
-fit1 <- lmer(Sev ~ Title*Temp*Var - Title:Temp:Var + (1| Iso/(Title:Trial:Set)), data=Y3)
-fit2 <- lmer(Sev ~ Title*Temp*Var - Title:Temp:Var + (1|Iso/Title/Set), data=Y3)
-fit3 <- lmer(Sev ~ Title*Temp + (1|Iso/Title/Trial), data=Y3)
-fit4 <- lmer(Sev ~ Title*Temp + (1|Iso/Title), data=Y3)
-a<-anova(fit1,fit2)
-print(a)
-
-
-
-
-
-```
+=
