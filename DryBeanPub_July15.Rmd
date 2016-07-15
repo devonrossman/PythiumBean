@@ -22,10 +22,10 @@ Y3$Trt<-as.character(Y3$Trt)
 Y3$Iso<-as.character(Y3$Iso)
 Y3$Set<-as.character(Y3$Set)
 Y3$Trial<-as.character(Y3$Trial)
-fitwght <- lmer(rtwght ~ Title + (1|Iso/Title/Set), data=Y3)
-fitarea <- lmer(rtarea ~ Title + (1|Iso/Title/Set), data=Y3)
-fitlngth <- lmer(rtlngth ~ Title + (1|Iso/Title/Set), data=Y3)
-fitemerge <- lmer(Emerge ~ Title + (1|Iso/Title/Set), data=Y3)
+fitwght <- lmer(rtwght ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitarea <- lmer(rtarea ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitlngth <- lmer(rtlngth ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitemerge <- lmer(Emerge ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
 ls1<-lsmeans(fitwght, contrast(trt.vs.ctrl, fitwght@frame$Title, ref=3)  ~ Title)
 ls2<-lsmeans(fitarea, contrast(trt.vs.ctrl, fitarea@frame$Title, ref=3)  ~ Title)
 ls3<-lsmeans(fitlngth, contrast(trt.vs.ctrl, fitlngth@frame$Title, ref=3)  ~ Title)
@@ -36,7 +36,7 @@ lngth1<-summary(ls3)
 emerge1<-summary(ls4)
 Dend<-cbind(wght1$lsmeans$lsmean, area1$lsmeans$lsmean,lngth1$lsmeans$lsmean,emerge1$lsmeans$lsmean)
 Dend<-scale(as.matrix(Dend)) 
-colnames(Dend)<-c("Root Dry Weight", "Root Area", "Root Lenght", "Emergence")
+colnames(Dend)<-c("Root Dry Weight", "Root Area", "Root Length", "Emergence")
 rownames(Dend)=wght1$lsmeans$Title
 chord = function (s,diag) {
   # G.Nesslage, B.Maurer
@@ -114,10 +114,10 @@ Y3$Trt<-as.character(Y3$Trt)
 Y3$Iso<-as.character(Y3$Iso)
 Y3$Set<-as.character(Y3$Set)
 Y3$Trial<-as.character(Y3$Trial)
-fitwght <- lmer(rtwght ~ Title + (1|Iso/Title/Set), data=Y3)
-fitarea <- lmer(rtarea ~ Title + (1|Iso/Title/Set), data=Y3)
-fitlngth <- lmer(rtlngth ~ Title + (1|Iso/Title/Set), data=Y3)
-fitemerge <- lmer(Emerge ~ Title + (1|Iso/Title/Set), data=Y3)
+fitwght <- lmer(rtwght ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitarea <- lmer(rtarea ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitlngth <- lmer(rtlngth ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitemerge <- lmer(Emerge ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
 ls1<-lsmeans(fitwght, contrast(trt.vs.ctrl, fitwght@frame$Title, ref=3)  ~ Title)
 ls2<-lsmeans(fitarea, contrast(trt.vs.ctrl, fitarea@frame$Title, ref=3)  ~ Title)
 ls3<-lsmeans(fitlngth, contrast(trt.vs.ctrl, fitlngth@frame$Title, ref=3)  ~ Title)
@@ -164,17 +164,6 @@ chord1 <- chord(Dend,diag=FALSE)
 chord.v <- as.vector(chord1)
 label <- rownames(Dend)
 chord.dis <- agnes(chord1, method="average", diss = TRUE) 
-chord.disv<-as.vector(chord.dis)
-# very simple dendrogram
-plot(chord.dis, ask = FALSE, which.plots = 2,labels = label)
-
-#RMSE
-rmse <- function(x, dis.matrix){
- r.m.s.e <- 1- (mean(as.vector(x)^2))/var(as.vector(dis.matrix))
- return(r.m.s.e)
-}
-chord.co.resid <- chord.ave.cov - chord.v
-rmse(chord.co.resid, chord.v)
 
 hc.rows<-hclust(chord.dis$diss)
 pheatmap(Dend, show_rownames = TRUE, show_colnames = TRUE,
@@ -185,7 +174,7 @@ fontsize_row=8)
 ```
 
 
-#Virulence-sorted Severity by Temperature - Treatment
+#Sorted-Severity, by Temperature, Treatment, Clade
 ```{r, echo=FALSE}
 library(scales)
 library(plyr)
@@ -200,26 +189,27 @@ rm(list = ls())
 Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
 Y3<-subset(Y, !(Y$Sev=="NA") #& !(Y$Var=="Z"))
 )
-Y4<-aggregate(Y3$Sev, list(Y3$Trt, Y3$Clade, Y3$Temp), na.rm=TRUE, mean)
+Y4<-aggregate(Y3$Sev, list(Y3$Trt, Y3$Clade, Y3$Title, Y3$Temp), na.rm=TRUE, mean)
 se <- function(x) sqrt(var(x, na.rm=TRUE)/(length(na.omit(x))))
-serror <- (aggregate(Y3$Sev, list(Y3$Trt, Y3$Clade, Y3$Temp), se))
+serror <- (aggregate(Y3$Sev, list(Y3$Trt, Y3$Clade, Y3$Title, Y3$Temp), se))
 Y4 <- cbind(Y4, serror$x)
-colnames(Y4) <- c("trt", "Clade", "Temp", "sev", "SE")
-limits<-aes(ymax=sev+(1.96*SE), ymin=sev-(1.96*SE))
+colnames(Y4) <- c("trt", "Clade", "Title", "Temp", "sev", "SE")
+limits<-aes(ymax=sev+(SE), ymin=sev-(SE))
 Y4$Temp<-as.factor(Y4$Temp)
 
 y <- ggplot(Y4, aes(y=sev, 
                     #fill=sdtrt, 
                     x=factor(Y4$trt), shape=Y4$Temp, color=Y4$Clade))
-y+geom_point(position="dodge", aes(x=reorder(trt, -sev)),  stat="identity", size=2.75)+
+y+geom_point(aes(x=reorder(trt, -sev)),  stat="identity", size=2.75)+
   theme_light()+
 geom_errorbar(limits, stat="identity", width=0.3)+
 labs(title="Seed Assay", x="Pythium spp.", y="Disease Severity Score")+
  theme(plot.title=element_text(size=20, colour="black"),
-axis.title=element_text(size=13, colour="black"), axis.text.x=element_text(size=8, color="black", angle=90, hjust=1, vjust=1), axis.text.y=element_text(size=10, color="black"), strip.text.y = element_text(size = 10),
+axis.title=element_text(size=13, colour="black"), axis.text.x=element_text(size=8, color="black", angle=90, hjust=1, vjust=0.5), axis.text.y=element_text(size=10, color="black"), strip.text.y = element_text(size = 10),
 strip.text.x = element_text(size = 10, color="black"))+
 scale_y_continuous(limits=c(0,1), oob=rescale_none)+
-  geom_vline(xintercept=37.5)
+  scale_x_discrete(breaks=Y4$trt, labels=Y4$Title)
+  #geom_vline(xintercept=37.5)
 
 ```
 
@@ -228,7 +218,9 @@ scale_y_continuous(limits=c(0,1), oob=rescale_none)+
 ```{r, echo=FALSE}
 library(scales)
 library(plyr)
-library(vegan)
+library(lme4)
+library(nlme)
+library(lsmeans)
 library(cluster)
 library(ade4)
 library(stats)
@@ -240,37 +232,45 @@ Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 Y3<-subset(Y, !(Y$rtareatrial=="NA") & !(Y$rtwghttrial=="NA"))
 se <- function(x) sqrt(var(x, na.rm=TRUE)/(length(na.omit(x))))
 
-Yrtwght<-aggregate(Y3$rtwghttrial, list(Y3$Title, Y3$Title), na.rm=TRUE, mean)
-sertwght <- (aggregate(Y3$rtwghttrial, list(Y3$Title, Y3$Title), se))
+rtwght <- lmer(rtwghttrial ~ Title*Var + (1|Iso/Title:Trial:Set), data=Y3)
+lsrtwght<-lsmeans(rtwght, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title)
+rtwghtlsmeans<-summary(lsrtwght)
 v1<-c("rtwght")
 v2<-rep(v1, 31)
-Yrtwght <- cbind(Yrtwght, sertwght$x, v2)
-colnames(Yrtwght) <- c("Title", "Title", "mean" , "SE", "Data")
+v3<-as.data.frame(rtwghtlsmeans$lsmeans$Title)
+Yrtwght <- as.data.frame(cbind(v3, rtwghtlsmeans$lsmeans$lsmean, rtwghtlsmeans$lsmeans$SE, v2))
+colnames(Yrtwght) <- c("Title", "mean" , "SE", "Data")
 
-Yrtarea<-aggregate(Y3$rtareatrial, list(Y3$Title, Y3$Title), na.rm=TRUE, mean)
-sertarea <- (aggregate(Y3$rtareatrial, list(Y3$Title, Y3$Title), se))
+rtarea <- lmer(rtareatrial ~ Title*Var + (1|Iso/Title:Trial:Set), data=Y3)
+lsrtarea<-lsmeans(rtarea, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title)
+rtarealsmeans<-summary(lsrtarea)
 v1<-c("rtarea")
 v2<-rep(v1, 31)
-Yrtarea <- cbind(Yrtarea, sertarea$x, v2)
-colnames(Yrtarea) <- c("Title", "Title", "mean" , "SE", "Data")
+v3<-as.data.frame(rtarealsmeans$lsmeans$Title)
+Yrtarea <- as.data.frame(cbind(v3, rtarealsmeans$lsmeans$lsmean, rtarealsmeans$lsmeans$SE, v2))
+colnames(Yrtarea) <- c("Title", "mean" , "SE", "Data")
 
-Yrtlngth<-aggregate(Y3$rtlngthtrial, list(Y3$Title, Y3$Title), na.rm=TRUE, mean)
-sertlngth <- (aggregate(Y3$rtlngthtrial, list(Y3$Title, Y3$Title), se))
+rtlngth <- lmer(rtlngthtrial ~ Title*Var + (1|Iso/Title:Trial:Set), data=Y3)
+lsrtlngth<-lsmeans(rtlngth, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title)
+rtlngthlsmeans<-summary(lsrtlngth)
 v1<-c("rtlngth")
 v2<-rep(v1, 31)
-Yrtlngth <- cbind(Yrtlngth, sertlngth$x, v2)
-colnames(Yrtlngth) <- c("Title", "Title", "mean" , "SE", "Data")
+v3<-as.data.frame(rtarealsmeans$lsmeans$Title)
+Yrtlngth <- as.data.frame(cbind(v3, rtlngthlsmeans$lsmeans$lsmean, rtlngthlsmeans$lsmeans$SE, v2))
+colnames(Yrtlngth) <- c("Title", "mean" , "SE", "Data")
 
-Yemerge<-aggregate(Y3$emergetrial, list(Y3$Title, Y3$Title), na.rm=TRUE, mean)
-seemerge <- (aggregate(Y3$emergetrial, list(Y3$Title, Y3$Title), se))
-v1<-c("rtemerge")
+Emerge <- lmer(emergetrial ~ Title*Var + (1|Iso/Title:Trial:Set), data=Y3)
+lsEmerge<-lsmeans(Emerge, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title)
+Emergelsmeans<-summary(lsEmerge)
+v1<-c("Emerge")
 v2<-rep(v1, 31)
-Yemerge <- cbind(Yemerge, seemerge$x, v2)
-colnames(Yemerge) <- c("Title", "Title", "mean" , "SE", "Data")
+v3<-as.data.frame(rtarealsmeans$lsmeans$Title)
+YEmerge <- as.data.frame(cbind(v3, Emergelsmeans$lsmeans$lsmean, Emergelsmeans$lsmeans$SE, v2))
+colnames(YEmerge) <- c("Title", "mean" , "SE", "Data")
 
-Y4<-rbind(Yrtwght, Yrtarea, Yrtlngth, Yemerge)
+Y4<-as.data.frame(rbind(Yrtwght, Yrtarea, Yrtlngth, YEmerge))
 
-limits<-aes(ymax=mean+(1.96*SE), ymin=mean-(1.96*SE))
+limits<-aes(ymax=mean+(SE), ymin=mean-(SE))
 
 y <- ggplot(Y4, aes(y=mean, 
                     x=Title))
@@ -280,8 +280,9 @@ y+geom_point(aes(x=reorder(Title, -mean), color=mean+(SE*1.96)<82), stat="identi
   theme_light()+
 
 labs(title="Seedling Assay", x="Pythium spp.", y="Percent Relative to NIC")+
- theme(plot.title=element_text(size=20, colour="black"),
-axis.title=element_text(size=13, colour="black"), axis.text.x=element_text(size=8, color="black", angle=90, hjust=1, vjust=1), axis.text.y=element_text(size=10, color="black"), strip.text.y = element_text(size = 10),
+ theme(text=element_text(family="Arial Narrow"),
+       plot.title=element_text(size=20, colour="black"),
+axis.title=element_text(size=13, colour="black"), axis.text.x=element_text(size=11, color="black", angle=90, hjust=1, vjust=0.5), axis.text.y=element_text(size=10, color="black"), strip.text.y = element_text(size = 10),
 strip.text.x = element_text(size = 10, color="black"))+
 scale_y_continuous(limits=c(0,120), oob=rescale_none)
 
@@ -289,121 +290,49 @@ scale_y_continuous(limits=c(0,120), oob=rescale_none)
 
 
 
-#RtArea Graph, Ordered
+#Sev Graph, Ordered
 ```{r, echo=FALSE}
 library(lme4)
 library(lsmeans)
 library(pbkrtest)
 library(nlme)
 library(ggplot2)
-Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
-Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA")
+library(plyr)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
+Y3<-subset(Y, !(Y$Sev=="NA")
 )
 Y3$Trt<-as.character(Y3$Trt)
 Y3$Iso<-as.character(Y3$Iso)
 Y3$Set<-as.character(Y3$Set)
 Y3$Trial<-as.character(Y3$Trial)
-fit3 <- lmer(rtarea ~ Title*Var + (1|Iso/Title/Set), data=Y3)
-ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title:Var)
-lsmean1<-summary(ls1)
-print(lsmean1)
-limits<-aes(ymin=lsmean-(1.96*SE), ymax=lsmean+(1.96*SE))
-g<-ggplot(lsmean1$lsmeans, aes(x=Title, y=lsmean))
-g+ geom_point(aes(x=reorder(Title, -lsmean)))+
-  theme_light()+
-  facet_grid(Var~.)+
-geom_errorbar(limits, width=0.2)+labs(y="Mean Root Area\n(in square cm)", x="")+
-  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
-```
+Y3$Temp<-as.character(Y3$Temp)
 
-#RtLngth Graph, Ordered
-```{r, echo=FALSE}
-library(lme4)
-library(lsmeans)
-library(pbkrtest)
-library(nlme)
-library(ggplot2)
-Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
-Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA")
-)
-Y3$Trt<-as.character(Y3$Trt)
-Y3$Iso<-as.character(Y3$Iso)
-Y3$Set<-as.character(Y3$Set)
-Y3$Trial<-as.character(Y3$Trial)
-fit3 <- lmer(rtlngth ~ Title*Var + (1|Iso/Title/Set), data=Y3)
-ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title:Var)
+Y4<-( ddply(Y3, c("Title", "Temp"), summarise,
+               N    = length(Sev),
+            Sevsd = sd(Sev, na.rm=TRUE),
+            Sevse = Sevsd / sqrt(N)))
+fit3 <- lmer(Sev ~ Title*Var*Temp 
+             + (1|Iso/(Title:Trial:Set)), data=Y3)
+ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title)
 lsmean1<-summary(ls1)
-print(lsmean1)
-limits<-aes(ymin=lsmean-(1.96*SE), ymax=lsmean+(1.96*SE))
-g<-ggplot(lsmean1$lsmeans, aes(x=Title, y=lsmean))
-g+ geom_point(aes(x=reorder(Title, -lsmean)))+
+lsmean1<-as.data.frame(lsmean1$lsmeans)
+#print(lsmean1)
+limits<-aes(ymin=lsmean1$lsmean-(1.96*Y4$Sevse), ymax=lsmean1$lsmean+(1.96*Y4$Sevse))
+limits2<-aes(ymin=lsmean1$lsmean-(1.96*lsmean1$SE), ymax=lsmean1$lsmean+(1.96*lsmean1$SE))
+g<-ggplot(lsmean1, aes(x=Title, y=lsmean, color=lsmean-(SE*1.96)>0.20))
+g+ geom_point(aes(x=reorder(Title, -lsmean)), position=position_dodge(width=0.5), size=4)+
   theme_light()+
-  facet_grid(Var~.)+
-geom_errorbar(limits, width=0.2)+labs(y="Mean Root Length\n(in cm)", x="")+
-  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
+  #facet_grid(Var~.)+
+geom_errorbar(limits2, width=0.3, position=position_dodge(width=0.5))+
+  labs(y="Disease Severity Index", x="")+
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5, color="black", size=18),
+        axis.title.y=element_text(size=22), legend.text=element_text(angle=0, color="black", size=22), legend.text.align=0.5, legend.title=element_text(angle=0, size=24), legend.title.align=0.5, legend.position="right", axis.text.y=element_text(angle=90, hjust=0.5, vjust=1, color="black", size=18), legend.text.align=0.5) + scale_colour_manual(name = 'p<0.05', values = setNames(c('red','dark green'), c(T, F)))
 ```
 
 
-#RtWght Graph, Ordered
-```{r, echo=FALSE}
-library(lme4)
-library(lsmeans)
-library(pbkrtest)
-library(nlme)
-library(ggplot2)
-Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
-Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA")
-)
-Y3$Trt<-as.character(Y3$Trt)
-Y3$Iso<-as.character(Y3$Iso)
-Y3$Set<-as.character(Y3$Set)
-Y3$Trial<-as.character(Y3$Trial)
-fit3 <- lmer(rtwght ~ Title*Var + (1|Iso/Title/Set), data=Y3)
-ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title:Var)
-lsmean1<-summary(ls1)
-limits<-aes(ymin=lsmean-(1.96*SE), ymax=lsmean+(1.96*SE))
-g<-ggplot(lsmean1$lsmeans, aes(x=Title, y=lsmean))
-g+ geom_point(aes(x=reorder(Title, -lsmean), colour=(lsmean+1.96*SE)<0.4))+
-  theme_light()+
-  facet_grid(Var~.)+
-geom_errorbar(limits, width=0.15, color="dark grey")+ylab(expression(paste('Mean Root Area ', (cm^{2})))) +
-  #labs(y="Mean Root Area \n(in cm2)", x="")+
-  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))+
-  scale_colour_manual(name = 'Significant', values = setNames(c('red','green'), c(T, F)))
-
-```
 
 
-#RtArea Graph, Ordered
-```{r, echo=FALSE}
-library(lme4)
-library(lsmeans)
-library(pbkrtest)
-library(nlme)
-library(ggplot2)
-Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
-Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA")
-)
-Y3$Trt<-as.character(Y3$Trt)
-Y3$Iso<-as.character(Y3$Iso)
-Y3$Set<-as.character(Y3$Set)
-Y3$Trial<-as.character(Y3$Trial)
-fit3 <- lmer(rtarea ~ Title*Var + (1|Iso/Title/Set), data=Y3)
-ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title:Var)
-lsmean1<-summary(ls1)
-limits<-aes(ymin=lsmean-(1.96*SE), ymax=lsmean+(1.96*SE))
-g<-ggplot(lsmean1$lsmeans, aes(x=Title, y=lsmean))
-g+ geom_point(aes(x=reorder(Title, -lsmean), colour=(lsmean+1.96*SE)<10.5))+
-  theme_light()+
-  facet_grid(Var~.)+
-geom_errorbar(limits, width=0.15, color="dark grey")+ylab(expression(paste('Mean Root Area ', (cm^{2})))) +
-  #labs(y="Mean Root Area \n(in cm2)", x="")+
-  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))+
-  scale_colour_manual(name = 'Significant', values = setNames(c('red','green'), c(T, F)))
-```
-
-
-#Sev Graph, Ordered (By Var, Temp)
+#Sev Graph, Ordered (By Temp)
 ```{r, echo=FALSE}
 library(lme4)
 library(lsmeans)
@@ -428,9 +357,11 @@ fit3 <- lmer(Sev ~ Title*Var*Temp
              + (1|Iso/(Title:Trial:Set)), data=Y3)
 ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title:Temp)
 lsmean1<-summary(ls1)
+lsmean1<-as.data.frame(lsmean1$lsmeans)
 #print(lsmean1)
-limits<-aes(ymin=lsmean1$lsmeans$lsmean-(1.96*Y4$Sevse), ymax=lsmean1$lsmeans$lsmean+(1.96*Y4$Sevse))
-g<-ggplot(lsmean1$lsmeans, aes(x=Title, y=lsmean, shape=Temp, color=lsmean-(SE*1.96)>0.16))
+limits<-aes(ymin=lsmean1$lsmean-(Y4$Sevsd), ymax=lsmean1$lsmean+(Y4$Sevsd))
+limits2<-aes(ymin=lsmean1$lsmean-(1.96*lsmean1$SE), ymax=lsmean1$lsmean+(1.96*lsmean1$SE))
+g<-ggplot(lsmean1, aes(x=Title, y=lsmean, shape=Temp, color=lsmean-(SE*1.96)>0.08))
 g+ geom_point(aes(x=reorder(Title, -lsmean), shape=Temp), position=position_dodge(width=0.5), size=4)+
   theme_light()+
   #facet_grid(Var~.)+
@@ -441,7 +372,7 @@ geom_errorbar(limits, width=0.3, position=position_dodge(width=0.5))+
 ```
 
 
-Assay Comparison
+#Assay Comparison
 ```{r, echo=FALSE}
 library(lme4)
 library(lsmeans)
@@ -470,4 +401,4 @@ cor(Y$RL, (Y$Sev26))
 cor(Y$Emerge, (Y$Sev26))
 
 ```
-=
+
