@@ -1,3 +1,6 @@
+#High Resolution images, below:
+#http://www.r-bloggers.com/high-resolution-figures-in-r/
+
 
 #Agglomerative, Hierarchical Clustering
 #Tests based on Lsmeans, Chord for RedHawk Cup Assay
@@ -86,11 +89,13 @@ chord.co.resid <- chord.ave.cov - chord.v
 rmse(chord.co.resid, chord.v)
 
 hc.rows<-hclust(chord.dis$diss)
+jpeg("pheatmapRH.jpeg", width = 4, height = 4.75, units = 'in', res = 300)
 pheatmap(Dend,  color = colorRampPalette(brewer.pal(n = 7, name =
 "RdYlBu"))(100), show_rownames = TRUE, show_colnames = TRUE,
          cluster_rows=hc.rows,
          clustering_method = "average",
 fontsize_row=8)
+dev.off()
 ```
 
 #Agglomerative, Hierarchical Clustering
@@ -163,12 +168,13 @@ label <- rownames(Dend)
 chord.dis <- agnes(chord1, method="average", diss = TRUE) 
 
 hc.rows<-hclust(chord.dis$diss)
+jpeg("pheatmapZ.jpeg", width = 4, height = 4.75, units = 'in', res = 300)
 pheatmap(Dend,  color = colorRampPalette(brewer.pal(n = 7, name =
 "RdYlBu"))(100), show_rownames = TRUE, show_colnames = TRUE,
          cluster_rows=hc.rows,
          clustering_method = "average",
 fontsize_row=8)
-
+dev.off()
 ```
 
 
@@ -358,15 +364,17 @@ lsmean1<-as.data.frame(lsmean1$lsmeans)
 #print(lsmean1)
 limits<-aes(ymin=lsmean1$lsmean-(Y4$Sevsd), ymax=lsmean1$lsmean+(Y4$Sevsd))
 limits2<-aes(ymin=lsmean1$lsmean-(1.96*lsmean1$SE), ymax=lsmean1$lsmean+(1.96*lsmean1$SE))
+jpeg("SevbyTemp.jpeg", width = 7, height = 5, units = 'in', res = 300)
 g<-ggplot(lsmean1, aes(x=Title, y=lsmean, shape=Temp, color=lsmean-(SE*1.96)>0.08))
-g+ geom_point(aes(x=reorder(Title, -lsmean), shape=Temp), position=position_dodge(width=0.5), size=4)+
+g+ geom_point(aes(x=reorder(Title, -lsmean), shape=Temp), position=position_dodge(width=0.5), size=2)+
   theme_light()+
   #facet_grid(Var~.)+
-geom_errorbar(limits2, width=0.3, position=position_dodge(width=0.5))+
+geom_errorbar(limits2, width=0.4, position=position_dodge(width=0.5))+
   labs(y="Disease Severity Index", x="")+
-  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5, color="black", size=18, face="italic"),
-        axis.title.y=element_text(size=22), legend.text=element_text(angle=0, color="black", size=22), legend.text.align=0.5, legend.title=element_text(angle=0, size=24), legend.title.align=0.5, legend.position="right", axis.text.y=element_text(angle=90, hjust=0.5, vjust=1, color="black", size=18), legend.text.align=0.5) + scale_colour_manual(name = 'p<0.05', values = setNames(c('red','dark green'), c(T, F))) +
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5, color="black", size=10, face="italic"),
+        axis.title.y=element_text(size=16), legend.text=element_text(angle=0, color="black", size=11), legend.text.align=0.5, legend.title=element_text(angle=0, size=11), legend.title.align=0.5, legend.position="right", axis.text.y=element_text(angle=90, hjust=0.5, vjust=1, color="black", size=12), legend.text.align=0.5) + scale_colour_manual(name = 'p<0.05', values = setNames(c('red','dark green'), c(T, F))) +
   scale_y_continuous("Mean DSI Scores", breaks=c(0, 0.5, 1), limits=c(-0.17, 1.22))
+dev.off()
 ```
 
 #Sev Graph, Ordered (By Temp*Var)
