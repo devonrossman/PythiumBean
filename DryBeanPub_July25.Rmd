@@ -296,6 +296,50 @@ dev.off()
 
 
 
+Root Dry Weight
+```{r, echo=FALSE}
+library(scales)
+library(plyr)
+library(lme4)
+library(nlme)
+library(lsmeans)
+library(cluster)
+library(ade4)
+library(stats)
+library(tabplot)
+library(ggplot2)
+#update.packages("tabplot")
+rm(list = ls())
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtareatrial=="NA") & !(Y$rtwghttrial=="NA"))
+se <- function(x) sqrt(var(x, na.rm=TRUE)/(length(na.omit(x))))
+
+rtwght <- lmer(rtwght ~ Title*Var + (1|Iso/Title:Trial:Set), data=Y3)
+lsrtwght<-lsmeans(rtwght, pairwise~ Title | Var)
+rtwghtlsmeans<-summary(lsrtwght)
+v3<-as.data.frame(rtwghtlsmeans$lsmeans)
+Yrtwght <- as.data.frame(cbind(v3)
+)
+
+limits<-aes(ymax=lsmean+(SE*1.96), ymin=lsmean-(SE*1.96))
+
+jpeg("RtWght.jpeg", width = 8.5, height = 4.5, units = 'in', res = 300)
+y <- ggplot(Yrtwght, aes(y=lsmean, 
+                    x=Title))
+y+geom_point(aes(x=reorder(Title, -lsmean), color=(lsmean+(SE*1.96)<0.4)), stat="identity", size=1.5)+
+  geom_errorbar(limits, stat="identity", width=0.4)+
+  theme_light()+
+labs(title="Seedling Assay", x="Pythium spp.", y="Percent Relative to NIC")+
+  facet_grid(Var~.)+
+ theme(text=element_text(family="Arial Narrow"),
+       plot.title=element_text(size=20, colour="black"),
+axis.title=element_text(size=13, colour="black"), axis.text.x=element_text(size=8, color="black", angle=90, hjust=1, vjust=0.5), axis.text.y=element_text(size=10, color="black"), strip.text.y = element_text(size = 7, color="black"),
+strip.text.x = element_text(size = 10, color="black"))+ scale_y_continuous(limits=c(-0.02,0.8), oob=rescale_none)
+dev.off()
+
+```
+
+
 #Sev Graph, Ordered
 ```{r, echo=FALSE}
 library(lme4)
