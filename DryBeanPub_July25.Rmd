@@ -96,6 +96,10 @@ pheatmap(Dend,  color = colorRampPalette(brewer.pal(n = 7, name =
          clustering_method = "average",
 fontsize_row=8)
 dev.off()
+
+a<-c(expression(paste(italic("Y3$Title"), "Go")), expression(paste(italic("Y3$Title"), "Go")))
+
+
 ```
 
 #Agglomerative, Hierarchical Clustering
@@ -193,7 +197,12 @@ rm(list = ls())
 Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
 Y3<-subset(Y, !(Y$Sev=="NA") #& !(Y$Var=="Z"))
 )
-Y4<-aggregate(Y3$Sev, list(Y3$Trt, Y3$Clade, Y3$Title, Y3$Temp), na.rm=TRUE, mean)
+#Y4<-aggregate(Y3$Sev, list(Y3$Trt, Y3$Clade, Y3$Title, Y3$Temp), na.rm=TRUE, mean)
+Y4<-( ddply(Y3, c("Title", "Temp", "Clade"), summarise,
+               N    = length(Sev),
+            sev = mean(Sev),
+            Sevsd = sd(Sev, na.rm=TRUE),
+            Sevse = Sevsd / sqrt(N)))
 se <- function(x) sqrt(var(x, na.rm=TRUE)/(length(na.omit(x))))
 serror <- (aggregate(Y3$Sev, list(Y3$Trt, Y3$Clade, Y3$Title, Y3$Temp), se))
 Y4 <- cbind(Y4, serror$x)
@@ -208,7 +217,7 @@ y <- ggplot(Y4, aes(y=sev,
 y+geom_point(aes(x=reorder(trt, -sev)),  stat="identity", size=1.5)+
   theme_light()+
 geom_errorbar(limits, stat="identity", width=0.4)+
-labs(title="Seed Assay", x="Pythium spp.", y="Disease Severity Score")+
+labs(title="Seed Assay", x="Pythium spp.", y="Mean DSI Scores")+
  theme(plot.title=element_text(size=18, colour="black"),
 axis.title=element_text(size=11, colour="black"), axis.text.x=element_text(size=7, color="black", angle=90, hjust=1, vjust=0.5), axis.text.y=element_text(size=10, color="black"), strip.text.y = element_text(size = 10),
 strip.text.x = element_text(size = 10, color="black"))+
@@ -217,6 +226,46 @@ scale_y_continuous(limits=c(0,1), oob=rescale_none)+
   #geom_vline(xintercept=37.5)
 dev.off()
 ```
+
+
+Clade Disease
+```{r, echo=FALSE}
+library(scales)
+library(plyr)
+library(vegan)
+library(cluster)
+library(ade4)
+library(stats)
+library(tabplot)
+library(ggplot2)
+#update.packages("tabplot")
+rm(list = ls())
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
+Y3<-subset(Y, !(Y$Sev=="NA") & !(Y$Clade=="Control")
+)
+se <- function(x) sqrt(var(x, na.rm=TRUE)/(length(na.omit(x))))
+Y4<-aggregate(Y3$Sev, list(Y3$Clade, Y3$Temp), na.rm=TRUE, mean)
+serror <- (aggregate(Y3$Sev, list(Y3$Clade, Y3$Temp), se))
+Y4 <- cbind(Y4, serror$x)
+colnames(Y4) <- c("Clade", "Temp", "sev", "SE")
+limits<-aes(ymax=sev+(SE), ymin=sev-(SE))
+Y4$Temp<-as.factor(Y4$Temp)
+
+jpeg("IsoCladeSev.jpeg", width = 5, height = 8, units = 'in', res = 300)
+y <- ggplot(Y4, aes(y=sev, 
+                    x=Clade, shape=Temp, color=Clade))
+y+geom_point(aes(x=reorder(Clade, -sev)),  stat="identity", position=position_dodge(width=0.5), size=2)+
+  theme_light()+
+geom_errorbar(limits, stat="identity",position=position_dodge(width=0.5), width=0.4)+
+labs(title="Seed Assay", x=expression(italic(Pythium)~Clade), y="Disease Severity Index")+
+ theme(plot.title=element_text(size=18, colour="black"),
+axis.title=element_text(size=11, colour="black"), axis.text.x=element_text(size=7, color="black", angle=90, hjust=1, vjust=0.5), axis.text.y=element_text(size=10, angle=90, hjust=0.5, vjust=0.5, color="black"))+
+scale_y_continuous(limits=c(0,1), oob=rescale_none)+
+  scale_x_discrete(breaks=Y4$trt, labels=Y4$Title)
+  #geom_vline(xintercept=37.5)
+dev.off()
+```
+
 
 
 #Graph of Cup Assay Parameters, Across Varieties
@@ -244,7 +293,9 @@ v1<-c("Root Weight %")
 v2<-rep(v1, 31)
 v3<-as.data.frame(rtwghtlsmeans$lsmeans$Title)
 Yrtwght <- as.data.frame(cbind(v3, rtwghtlsmeans$lsmeans$lsmean, rtwghtlsmeans$lsmeans$SE, v2))
-colnames(Yrtwght) <- c("Title", "mean" , "SE", "Data")
+serror<-aggregate(Y3$rtwghttrial, list(Y3$Title, Y3$Title), se)
+Yrtwght<-cbind(Yrtwght, serror$x)
+colnames(Yrtwght) <- c("Title", "mean" , "SE", "Data", "se")
 
 rtarea <- lmer(rtareatrial ~ Title*Var + (1|Iso/Title:Trial:Set), data=Y3)
 lsrtarea<-lsmeans(rtarea, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title)
@@ -253,7 +304,9 @@ v1<-c("Root Area %")
 v2<-rep(v1, 31)
 v3<-as.data.frame(rtarealsmeans$lsmeans$Title)
 Yrtarea <- as.data.frame(cbind(v3, rtarealsmeans$lsmeans$lsmean, rtarealsmeans$lsmeans$SE, v2))
-colnames(Yrtarea) <- c("Title", "mean" , "SE", "Data")
+serror<-aggregate(Y3$rtareatrial, list(Y3$Title, Y3$Title), se)
+Yrtarea<-cbind(Yrtarea, serror$x)
+colnames(Yrtarea) <- c("Title", "mean" , "SE", "Data", "se")
 
 rtlngth <- lmer(rtlngthtrial ~ Title*Var + (1|Iso/Title:Trial:Set), data=Y3)
 lsrtlngth<-lsmeans(rtlngth, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title)
@@ -262,7 +315,9 @@ v1<-c("Root Length %")
 v2<-rep(v1, 31)
 v3<-as.data.frame(rtarealsmeans$lsmeans$Title)
 Yrtlngth <- as.data.frame(cbind(v3, rtlngthlsmeans$lsmeans$lsmean, rtlngthlsmeans$lsmeans$SE, v2))
-colnames(Yrtlngth) <- c("Title", "mean" , "SE", "Data")
+serror<-aggregate(Y3$rtlngthtrial, list(Y3$Title, Y3$Title), se)
+Yrtlngth<-cbind(Yrtlngth, serror$x)
+colnames(Yrtlngth) <- c("Title", "mean" , "SE", "Data", "se")
 
 Emerge <- lmer(emergetrial ~ Title*Var + (1|Iso/Title:Trial:Set), data=Y3)
 lsEmerge<-lsmeans(Emerge, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title)
@@ -271,11 +326,13 @@ v1<-c("Emergence %")
 v2<-rep(v1, 31)
 v3<-as.data.frame(rtarealsmeans$lsmeans$Title)
 YEmerge <- as.data.frame(cbind(v3, Emergelsmeans$lsmeans$lsmean, Emergelsmeans$lsmeans$SE, v2))
-colnames(YEmerge) <- c("Title", "mean" , "SE", "Data")
+serror<-aggregate(Y3$Emergetrial, list(Y3$Title, Y3$Title), se)
+YEmerge<-cbind(YEmerge, serror$x)
+colnames(YEmerge) <- c("Title", "mean" , "SE", "Data", "se")
 
-Y4<-as.data.frame(rbind(Yrtwght, Yrtarea, Yrtlngth, YEmerge))
+Y4<-as.data.frame(rbind(YEmerge, Yrtwght, Yrtarea, Yrtlngth))
 
-limits<-aes(ymax=mean+(SE*1.96), ymin=mean-(SE*1.96))
+limits<-aes(ymax=mean+(se), ymin=mean-(se))
 jpeg("CupAssay.jpeg", width = 8.5, height = 4.5, units = 'in', res = 300)
 
 y <- ggplot(Y4, aes(y=mean, 
@@ -318,25 +375,37 @@ rtwght <- lmer(rtwght ~ Title*Var + (1|Iso/Title:Trial:Set), data=Y3)
 lsrtwght<-lsmeans(rtwght, pairwise~ Title | Var)
 rtwghtlsmeans<-summary(lsrtwght)
 v3<-as.data.frame(rtwghtlsmeans$lsmeans)
-Yrtwght <- as.data.frame(cbind(v3)
-)
-
+Yrtwght <- as.data.frame(cbind(v3))
+YrtwghtRH <- Yrtwght[-c(32:62),]
+YrtwghtZ <- Yrtwght[-c(1:31),]
 limits<-aes(ymax=lsmean+(SE*1.96), ymin=lsmean-(SE*1.96))
 
-jpeg("RtWght.jpeg", width = 8.5, height = 4.5, units = 'in', res = 300)
-y <- ggplot(Yrtwght, aes(y=lsmean, 
+jpeg("RtWghtRH.jpeg", width = 8, height = 3, units = 'in', res = 300)
+yRH <- ggplot(YrtwghtRH, aes(y=lsmean, 
                     x=Title))
-y+geom_point(aes(x=reorder(Title, -lsmean), color=(lsmean+(SE*1.96)<0.4)), stat="identity", size=1.5)+
+yRH+geom_point(aes(x=reorder(Title, -lsmean), color=(lsmean<0.55)), stat="identity", size=1.5)+
   geom_errorbar(limits, stat="identity", width=0.4)+
   theme_light()+
-labs(title="Seedling Assay", x="Pythium spp.", y="Percent Relative to NIC")+
-  facet_grid(Var~.)+
+labs(title="Root Dry Weight", x="Pythium spp.", y="'Red Hawk'\n Root Dry Weight (g)")+
  theme(text=element_text(family="Arial Narrow"),
        plot.title=element_text(size=20, colour="black"),
-axis.title=element_text(size=13, colour="black"), axis.text.x=element_text(size=8, color="black", angle=90, hjust=1, vjust=0.5), axis.text.y=element_text(size=10, color="black"), strip.text.y = element_text(size = 7, color="black"),
-strip.text.x = element_text(size = 10, color="black"))+ scale_y_continuous(limits=c(-0.02,0.8), oob=rescale_none)
+axis.title=element_text(size=9, colour="black"), axis.text.x=element_text(size=8, color="black", angle=90, hjust=1, vjust=0.5, face="italic"), axis.text.y=element_text(size=8, color="black"), strip.text.y = element_text(size = 7, color="black"),
+strip.text.x = element_text(size = 9, color="black"))+ scale_y_continuous(limits=c(-0.02,0.8), oob=rescale_none)
 dev.off()
 
+
+jpeg("RtWghtZ.jpeg", width = 8, height = 3, units = 'in', res = 300)
+yZ <- ggplot(YrtwghtZ, aes(y=lsmean, 
+                    x=Title))
+yZ+geom_point(aes(x=reorder(Title, -lsmean), color=(lsmean<0.3)), stat="identity", size=1.5)+
+  geom_errorbar(limits, stat="identity", width=0.4)+
+  theme_light()+
+labs(title="Root Dry Weight", x="Pythium spp.", y="'Zorro' \nRoot Dry Weight (g)")+
+ theme(text=element_text(family="Arial Narrow"),
+       plot.title=element_text(size=20, colour="black"),
+axis.title=element_text(size=9, colour="black"), axis.text.x=element_text(size=8, color="black", angle=90, hjust=1, vjust=0.5, face="italic"), axis.text.y=element_text(size=8, color="black"), strip.text.y = element_text(size = 7, color="black"),
+strip.text.x = element_text(size = 9, color="black"))+ scale_y_continuous(limits=c(-0.02,0.8), oob=rescale_none)
+dev.off()
 ```
 
 
@@ -363,21 +432,21 @@ Y4<-( ddply(Y3, c("Title", "Temp"), summarise,
             Sevse = Sevsd / sqrt(N)))
 fit3 <- lmer(Sev ~ Title*Var*Temp 
              + (1|Iso/(Title:Trial:Set)), data=Y3)
-ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title)
+ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title | Temp)
 lsmean1<-summary(ls1)
 lsmean1<-as.data.frame(lsmean1$lsmeans)
 #print(lsmean1)
-limits<-aes(ymin=lsmean1$lsmean-(1.96*Y4$Sevse), ymax=lsmean1$lsmean+(1.96*Y4$Sevse))
+limits<-aes(ymin=lsmean1$lsmean-(Y4$Sevse), ymax=lsmean1$lsmean+(Y4$Sevse))
 limits2<-aes(ymin=lsmean1$lsmean-(1.96*lsmean1$SE), ymax=lsmean1$lsmean+(1.96*lsmean1$SE))
 jpeg("SevbyTemp.jpeg", width = 8, height = 5, units = 'in', res = 300)
-g<-ggplot(lsmean1, aes(x=Title, y=lsmean, color=lsmean-(SE*1.96)>0.20))
-g+ geom_point(aes(x=reorder(Title, -lsmean)), position=position_dodge(width=0.5), size=4)+
+g<-ggplot(lsmean1, aes(x=Title, y=lsmean, color=lsmean-(SE*1.96)>0.20), position=position_dodge(width=0.5))
+g+ geom_point(aes(x=reorder(Title, -lsmean), shape=Temp), size=1)+
   theme_light()+
   #facet_grid(Var~.)+
-geom_errorbar(limits2, width=0.3, position=position_dodge(width=0.5))+
+geom_errorbar(limits, width=0.3, position=position_dodge(width=0.5))+
   labs(y="Disease Severity Index", x="")+
-  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5, color="black", size=18),
-        axis.title.y=element_text(size=22), legend.text=element_text(angle=0, color="black", size=22), legend.text.align=0.5, legend.title=element_text(angle=0, size=24), legend.title.align=0.5, legend.position="right", axis.text.y=element_text(angle=90, hjust=0.5, vjust=1, color="black", size=18), legend.text.align=0.5) + scale_colour_manual(name = 'p<0.05', values = setNames(c('red','dark green'), c(T, F)))
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5, color="black", size=9),
+        axis.title.y=element_text(size=10), legend.text=element_text(angle=0, color="black", size=22), legend.text.align=0.5, legend.title=element_text(angle=0, size=24), legend.title.align=0.5, legend.position="right", axis.text.y=element_text(angle=90, hjust=0.5, vjust=1, color="black", size=9), legend.text.align=0.5) + scale_colour_manual(name = 'p<0.05', values = setNames(c('red','dark green'), c(T, F)))
 dev.off()
 ```
 
@@ -409,18 +478,20 @@ ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title:Temp)
 lsmean1<-summary(ls1)
 lsmean1<-as.data.frame(lsmean1$lsmeans)
 #print(lsmean1)
-limits<-aes(ymin=lsmean1$lsmean-(Y4$Sevsd), ymax=lsmean1$lsmean+(Y4$Sevsd))
+
+limits<-aes(ymin=lsmean1$lsmean-(Y4$Sevse), ymax=lsmean1$lsmean+(Y4$Sevse))
+
 limits2<-aes(ymin=lsmean1$lsmean-(1.96*lsmean1$SE), ymax=lsmean1$lsmean+(1.96*lsmean1$SE))
-jpeg("SevbyTemp.jpeg", width = 9.5, height = 5, units = 'in', res = 300)
+jpeg("SevbyTemp.jpeg", width = 5, height = 4, units = 'in', res = 300)
 g<-ggplot(lsmean1, aes(x=Title, y=lsmean, shape=Temp, color=lsmean-(SE*1.96)>0.08))
-g+ geom_point(aes(x=reorder(Title, -lsmean), shape=Temp), position=position_dodge(width=0.5), size=2)+
+g+ geom_point(aes(x=reorder(Title, -lsmean), shape=Temp), position=position_dodge(width=0.5), size=1)+
   theme_light()+
   #facet_grid(Var~.)+
-geom_errorbar(limits2, width=0.4, position=position_dodge(width=0.5))+
+geom_errorbar(limits, width=0.5, position=position_dodge(width=0.5))+
   labs(y="Disease Severity Index", x="")+
-  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5, color="black", size=10, face="italic"),
-        axis.title.y=element_text(size=16), legend.text=element_text(angle=0, color="black", size=11), legend.text.align=0.5, legend.title=element_text(angle=0, size=11), legend.title.align=0.5, legend.position="right", axis.text.y=element_text(angle=90, hjust=0.5, vjust=1, color="black", size=12), legend.text.align=0.5) + scale_colour_manual(name = 'p<0.05', values = setNames(c('red','dark green'), c(T, F))) +
-  scale_y_continuous("Mean DSI Scores", breaks=c(0, 0.5, 1), limits=c(-0.17, 1.22))
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5, color="black", size=6, face="italic"),
+        axis.title.y=element_text(size=7), legend.text=element_text(angle=0, color="black", size=1), legend.text.align=0.5, legend.title=element_text(angle=0, size=1), legend.title.align=0.5, legend.position="right", axis.text.y=element_text(angle=90, hjust=0.5, vjust=1, color="black", size=6), legend.text.align=0.5) + scale_colour_manual(name = 'p<0.05', values = setNames(c('red','dark green'), c(T, F))) +
+  scale_y_continuous("Disease Severity Index", breaks=c(0, 0.5, 1), limits=c(-0.04, 1.03))
 dev.off()
 ```
 
