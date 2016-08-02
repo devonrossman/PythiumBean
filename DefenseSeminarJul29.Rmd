@@ -258,7 +258,7 @@ y <- ggplot(YEmerge, aes(y=mean,
 y+geom_point(aes(x=reorder(Title, -mean), color=mean+(SE*1.96)<82), stat="identity", size=1.5)+
   geom_errorbar(limits, stat="identity", width=0.4)+
   theme_light()+
-labs(title="Emergence", x="Pythium spp.", y="Percent Relative to NIC")+
+labs(title="Emergence", x="Pythium spp.", y="Emergence (%)")+
  theme(text=element_text(family="Arial Narrow"),
        plot.title=element_text(size=20, colour="black"),
 axis.title=element_text(size=13, colour="black"), axis.text.x=element_text(size=8, color="black", angle=90, hjust=1, vjust=0.5), axis.text.y=element_text(size=10, color="black"), strip.text.y = element_text(size = 7, color="black"),
@@ -539,24 +539,25 @@ library(ggplot2)
 library(graphics)
 rm(list = ls())
 Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/Assay.csv"))
+
+jpeg("AssayCompare.jpeg", width = 8, height = 6, units = 'in', res = 300)
 par(mfrow=c(2,4))
-jpeg("AssayCompare.jpeg", width = 7, height = 5, units = 'in', res = 300)
-plot(Y$Emerge, (Y$Sev20), ylab="Disease Severity Index \n 20 C", xlab="Emergence %")
-plot(Y$RDW, (Y$Sev20), ylab="Disease Severity Index \n 20 C", xlab="Root Dry Weight \n (g)")
-plot(Y$RA, (Y$Sev20), ylab="Disease Severity Index \n 20 C", xlab="Root Area \n (sq. cm)")
-plot(Y$RL, (Y$Sev20), ylab="Disease Severity Index \n 20 C", xlab="Root Length \n (cm)")
-plot(Y$Emerge, (Y$Sev26), ylab="Disease Severity Index \n 26 C", xlab="Emergence %")
-plot(Y$RDW, (Y$Sev26), ylab="Disease Severity Index \n 26 C", xlab="Root Dry Weight \n (g)")
-plot(Y$RA, (Y$Sev26), ylab="Disease Severity Index \n 26 C", xlab="Root Area \n (sq. cm)")
-plot(Y$RL, (Y$Sev26), ylab="Disease Severity Index \n 26 C", xlab="Root Length \n (cm)")
-cor(Y$RL, (Y$Sev20))
-cor(Y$RA, (Y$Sev20))
-cor(Y$RL, (Y$Sev20))
-cor(Y$Emerge, (Y$Sev20))
-cor(Y$RL, (Y$Sev26))
-cor(Y$RA, (Y$Sev26))
-cor(Y$RL, (Y$Sev26))
-cor(Y$Emerge, (Y$Sev26))
+plot(Y$Emerge, (Y$Sev20), ylab="Disease Severity Index (20 C)", xlab="Emergence %")
+plot(Y$RDW, (Y$Sev20), ylab="Disease Severity Index (20 C)", xlab="Root Dry Weight (g)")
+plot(Y$RA, (Y$Sev20), ylab="Disease Severity Index (20 C)", xlab=expression(paste("Root Area (", cm^2, ")")))
+plot(Y$RL, (Y$Sev20), ylab="Disease Severity Index (20 C)", xlab="Root Length (cm)")
+plot(Y$Emerge, (Y$Sev26), ylab="Disease Severity Index (26 C)", xlab="Emergence %")
+plot(Y$RDW, (Y$Sev26), ylab="Disease Severity Index (26 C)", xlab="Root Dry Weight (g)")
+plot(Y$RA, (Y$Sev26), ylab="Disease Severity Index (26 C)", xlab=expression(paste("Root Area (", cm^2, ")")))
+plot(Y$RL, (Y$Sev26), ylab="Disease Severity Index (26 C)", xlab="Root Length (cm)")
+cor(Y$RDW, (Y$Sev20), method="pearson")
+cor(Y$RA, (Y$Sev20), method="pearson")
+cor(Y$RL, (Y$Sev20), method="pearson")
+cor(Y$Emerge, (Y$Sev20), method="pearson")
+cor(Y$RDW, (Y$Sev26), method="pearson")
+cor(Y$RA, (Y$Sev26), method="pearson")
+cor(Y$RL, (Y$Sev26), method="pearson")
+cor(Y$Emerge, (Y$Sev26), method="pearson")
 dev.off()
 ```
 
