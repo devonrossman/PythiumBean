@@ -255,7 +255,7 @@ jpeg("Emerge.jpeg", width = 8.5, height = 4.5, units = 'in', res = 300)
 
 y <- ggplot(YEmerge, aes(y=mean, 
                     x=Title))
-y+geom_point(aes(x=reorder(Title, -mean), color=mean+(SE*1.96)<82), stat="identity", size=1.5)+
+y+geom_bar(aes(x=reorder(Title, -mean), fill=mean+(SE*1.96)>82), stat="identity", width=0.7)+
   geom_errorbar(limits, stat="identity", width=0.4)+
   theme_light()+
 labs(title="Emergence", x="Pythium spp.", y="Emergence (%)")+
@@ -328,9 +328,9 @@ jpeg("Rootgrowth.jpeg", width = 8.5, height = 4.5, units = 'in', res = 300)
 
 y <- ggplot(Y4, aes(y=mean, 
                     x=reorder(Title, -mean)))
-y+geom_point(data=Yrtwght, aes(x=reorder(Title, -mean), color=mean+(SE*1.96)<82), stat="identity", size=1.5)+
-  geom_point(data=Yrtlngth, aes(x=reorder(Title, -mean), color=mean+(SE*1.96)<82), stat="identity", size=1.5)+
-    geom_point(data=Yrtarea, aes( x=reorder(Title, -mean), color=mean+(SE*1.96)<82), stat="identity", size=1.5)+
+y+geom_bar(data=Yrtwght, aes(x=reorder(Title, -mean), fill=mean>75.5), stat="identity", width=0.7)+
+  geom_bar(data=Yrtlngth, aes(x=reorder(Title, -mean), fill=mean+(SE*1.96)>82), stat="identity", width=0.7)+
+    geom_bar(data=Yrtarea, aes( x=reorder(Title, -mean), fill=mean+(SE*1.96)>82), stat="identity", width=0.7)+
   geom_errorbar(limits, stat="identity", width=0.4)+
   facet_grid(Data~.)+
   theme_light()+
@@ -345,7 +345,7 @@ dev.off()
 
 
 
-#Graph of Cup Assay Parameters, Across Varieties
+#Graph of Cup Assay Parameters, Across Varieties #NO LONGER USED
 ```{r, echo=FALSE}
 library(scales)
 library(plyr)
@@ -468,8 +468,8 @@ col1<-c("#0000FF", "#EE3B3B")
 jpeg("RtWght.jpeg", width = 8.5, height = 4.5, units = 'in', res = 300)
 y <- ggplot(Yrtwght, aes(y=lsmean, 
                     x=reorder(Title, -lsmean)))
-y+geom_point(data=RHlsmeans, aes(color=(lsmean<.55)), stat="identity", size=1.5)+
-  geom_point(data=Zlsmeans, aes(color=(lsmean<.30)), stat="identity", size=1.5)+
+y+geom_bar(data=RHlsmeans, aes(fill=(lsmean>.55)), stat="identity", width=0.7)+
+  geom_bar(data=Zlsmeans, aes(fill=(lsmean>.30)), stat="identity", width=0.7)+
   geom_errorbar(limits2, stat="identity", width=0.4)+
   facet_grid(Var~.)+
   theme_light()+
