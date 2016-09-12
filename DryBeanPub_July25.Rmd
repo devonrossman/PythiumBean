@@ -261,7 +261,7 @@ labs(title="Seed Assay", x=expression(italic(Pythium)~Clade), y="Disease Severit
  theme(plot.title=element_text(size=18, colour="black"),
 axis.title=element_text(size=11, colour="black"), axis.text.x=element_text(size=7, color="black", angle=90, hjust=1, vjust=0.5), axis.text.y=element_text(size=10, angle=90, hjust=0.5, vjust=0.5, color="black"))+
 scale_y_continuous(limits=c(0,1), oob=rescale_none)+
-  scale_x_discrete(breaks=Y4$trt, labels=Y4$Title)
+  scale_x_discrete(breaks=Y4$Clade)
   #geom_vline(xintercept=37.5)
 dev.off()
 ```
@@ -370,6 +370,7 @@ rm(list = ls())
 Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 Y3<-subset(Y, !(Y$rtareatrial=="NA") & !(Y$rtwghttrial=="NA"))
 se <- function(x) sqrt(var(x, na.rm=TRUE)/(length(na.omit(x))))
+descdist(Y3$rtwghttrial, discrete=FALSE)
 
 rtwght <- lmer(rtwght ~ Title*Var + (1|Iso/Title:Trial:Set), data=Y3)
 lsrtwght<-lsmeans(rtwght, pairwise~ Title | Var)
@@ -459,6 +460,7 @@ library(pbkrtest)
 library(nlme)
 library(ggplot2)
 library(plyr)
+library(fitdistrplus)
 Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
 Y3<-subset(Y, !(Y$Sev=="NA")
 )
@@ -467,6 +469,8 @@ Y3$Iso<-as.character(Y3$Iso)
 Y3$Set<-as.character(Y3$Set)
 Y3$Trial<-as.character(Y3$Trial)
 Y3$Temp<-as.character(Y3$Temp)
+
+#descdist(Y3$Sev, discrete=FALSE)
 
 Y4<-( ddply(Y3, c("Title", "Temp"), summarise,
                N    = length(Sev),

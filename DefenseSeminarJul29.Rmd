@@ -418,10 +418,11 @@ y+geom_point(aes(x=reorder(Title, -mean), color=mean+(SE*1.96)<82), stat="identi
   geom_errorbar(limits, stat="identity", width=0.4)+
   facet_grid(Data~.)+
   theme_light()+
-labs(title="Seedling Assay", x="Pythium spp.", y="Percent Relative to NIC")+
+labs(title="", x="", y="Percent Relative to NIC")+
  theme(text=element_text(family="Arial Narrow"),
        plot.title=element_text(size=20, colour="black"),
-axis.title=element_text(size=13, colour="black"), axis.text.x=element_text(size=8, color="black", angle=90, hjust=1, vjust=0.5), axis.text.y=element_text(size=10, color="black"), strip.text.y = element_text(size = 7, color="black"),
+axis.title=element_text(size=11, colour="black"), axis.text.x=element_text(size=9.5, color="black", face="italic", angle=90, hjust=1, vjust=0.5), axis.text.y=element_text(size=9.5, color="black"), strip.text.y = element_text(size = 7, color="black"),
+legend.text=element_text(size=1),
 strip.text.x = element_text(size = 10, color="black"))+
 scale_y_continuous(limits=c(-10,130), oob=rescale_none)
 dev.off()
@@ -610,3 +611,231 @@ geom_errorbar(limits, width=0.3, position=position_dodge(width=0.5))+
   scale_y_continuous("Mean DSI Scores", breaks=c(0, 0.5, 1), limits=c(-0.2, 1.22))
 
 ```
+
+
+#Note: The Following is Merger of Two Assays; Results are interesting, but not used:
+#Agglomerative, Hierarchical Clustering
+#Tests based on Lsmeans, Chord for RedHawk Cup Assay
+```{r}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(cluster)
+library(nlme)
+library(ggplot2)
+library(pheatmap)
+library(RColorBrewer)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y1 <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
+Y2 <- subset(Y1, !(SevPercent=="NA") & (Var=="RH")
+)
+Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$Title== "NIC, No Rice") & !(Y$rtareatrial=="NA") & (Y$Var=="RH")
+)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trt<-as.character(Y3$Trt)
+Y2$Iso<-as.character(Y2$Iso)
+Y2$Set<-as.character(Y2$Set)
+Y2$Trt<-as.character(Y2$Trt)
+Y2$Trial<-as.character(Y2$Trial)
+fitwght <- lmer(rtwght ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitarea <- lmer(rtarea ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitlngth <- lmer(rtlngth ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitemerge <- lmer(Emerge ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitsev<- lmer(Sev ~ Title + (1|Iso/Title:Trial:Set), data=Y2)
+ls1<-lsmeans(fitwght, contrast(trt.vs.ctrl, fitwght@frame$Title, ref=3)  ~ Title)
+ls2<-lsmeans(fitarea, contrast(trt.vs.ctrl, fitarea@frame$Title, ref=3)  ~ Title)
+ls3<-lsmeans(fitlngth, contrast(trt.vs.ctrl, fitlngth@frame$Title, ref=3)  ~ Title)
+ls4<-lsmeans(fitemerge, contrast(trt.vs.ctrl, fitemerge@frame$Title, ref=3)  ~ Title)
+ls5<-lsmeans(fitsev, contrast(trt.vs.ctrl, fitemerge@frame$Title, ref=3)  ~ Title)
+wght1<-summary(ls1)
+area1<-summary(ls2)
+lngth1<-summary(ls3)
+emerge1<-summary(ls4)
+sev1<-summary(ls5)
+Dend<-cbind(wght1$lsmeans$lsmean, area1$lsmeans$lsmean,lngth1$lsmeans$lsmean,emerge1$lsmeans$lsmean, sev1$lsmeans$lsmean)
+Dend<-scale(as.matrix(Dend)) 
+colnames(Dend)<-c("Root Dry Weight", "Root Area", "Root Length", "Emergence", "Sev")
+rownames(Dend)=wght1$lsmeans$Title
+chord = function (s,diag) {
+  # G.Nesslage, B.Maurer
+  # computes chord distance
+  # diag == TRUE returns full distance matrix
+  # diag == FALSE returns distance matrix as dist object
+  n = nrow(s)
+  p <- ncol(s)
+  D = matrix(0,n,n)
+  m <- 1
+  
+  for (i in 1:(n-1)){
+    for (j in (i+1):n){
+      nd <- matrix(0,p,1)
+      dd1 <- matrix(0,p,1)
+      dd2 <- matrix(0,p,1)
+      for (k in 1:p){
+        nd[k,]<- s[i,k]*s[j,k]
+        dd1[k,] <- (s[i,k])^2
+        dd2[k,] <- (s[j,k])^2
+      }
+      D[i,j] <- sqrt(2*(1-(sum(nd)/sqrt(sum(dd1)*
+                                          sum(dd2)))))
+      D[j,i] <- D[i,j]
+    }
+  }
+  
+  if(diag==FALSE) {D=as.dist(D)}
+  return (D)
+}
+
+chord1 <- chord(Dend,diag=FALSE)
+chord.v <- as.vector(chord1)
+label <- rownames(Dend)
+chord.dis <- agnes(chord1, method="average", diss = TRUE) 
+chord.disv<-as.vector(chord.dis)
+# very simple dendrogram
+plot(chord.dis, ask = FALSE, which.plots = 2,labels = label)
+
+#Cophenetic Distance and Correlation
+chord.ave.co <- cophenetic(chord.dis)
+chord.ave.cov <- as.vector(chord.ave.co)
+cor(chord.ave.cov, chord.v)
+plot(y = chord.ave.cov, x = chord.v)
+
+#RMSE
+rmse <- function(x, dis.matrix){
+ r.m.s.e <- 1- (mean(as.vector(x)^2))/var(as.vector(dis.matrix))
+ return(r.m.s.e)
+}
+chord.co.resid <- chord.ave.cov - chord.v
+rmse(chord.co.resid, chord.v)
+
+hc.rows<-hclust(chord.dis$diss)
+jpeg("pheatmapRH.jpeg", width = 4, height = 4.75, units = 'in', res = 300)
+pheatmap(Dend,  color = colorRampPalette(brewer.pal(n = 7, name =
+"RdYlBu"))(100), show_rownames = TRUE, show_colnames = TRUE,
+         cluster_rows=hc.rows,
+         clustering_method = "average",
+fontsize_row=8)
+dev.off()
+
+a<-c(expression(paste(italic("Y3$Title"), "Go")), expression(paste(italic("Y3$Title"), "Go")))
+
+
+```
+
+
+
+
+#Agglomerative, Hierarchical Clustering
+#Tests based on Lsmeans, Chord for Zorro Cup Assay
+```{r}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(cluster)
+library(nlme)
+library(ggplot2)
+library(pheatmap)
+library(RColorBrewer)
+rm(list = ls())
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y1 <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
+Y2 <- subset(Y1, !(SevPercent=="NA") & (Var=="Z")
+)
+Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$Title== "NIC, No Rice") & !(Y$rtareatrial=="NA") & (Y$Var=="Z")
+)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trt<-as.character(Y3$Trt)
+Y2$Iso<-as.character(Y2$Iso)
+Y2$Set<-as.character(Y2$Set)
+Y2$Trt<-as.character(Y2$Trt)
+Y2$Trial<-as.character(Y2$Trial)
+fitwght <- lmer(rtwght ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitarea <- lmer(rtarea ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitlngth <- lmer(rtlngth ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitemerge <- lmer(Emerge ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitsev<- lmer(Sev ~ Title + (1|Iso/Title:Trial:Set), data=Y2)
+ls1<-lsmeans(fitwght, contrast(trt.vs.ctrl, fitwght@frame$Title, ref=3)  ~ Title)
+ls2<-lsmeans(fitarea, contrast(trt.vs.ctrl, fitarea@frame$Title, ref=3)  ~ Title)
+ls3<-lsmeans(fitlngth, contrast(trt.vs.ctrl, fitlngth@frame$Title, ref=3)  ~ Title)
+ls4<-lsmeans(fitemerge, contrast(trt.vs.ctrl, fitemerge@frame$Title, ref=3)  ~ Title)
+ls5<-lsmeans(fitsev, contrast(trt.vs.ctrl, fitemerge@frame$Title, ref=3)  ~ Title)
+wght1<-summary(ls1)
+area1<-summary(ls2)
+lngth1<-summary(ls3)
+emerge1<-summary(ls4)
+sev1<-summary(ls5)
+Dend<-cbind(wght1$lsmeans$lsmean, area1$lsmeans$lsmean,lngth1$lsmeans$lsmean,emerge1$lsmeans$lsmean, sev1$lsmeans$lsmean)
+Dend<-scale(as.matrix(Dend)) 
+colnames(Dend)<-c("Root Dry Weight", "Root Area", "Root Length", "Emergence", "Sev")
+rownames(Dend)=wght1$lsmeans$Title
+chord = function (s,diag) {
+  # G.Nesslage, B.Maurer
+  # computes chord distance
+  # diag == TRUE returns full distance matrix
+  # diag == FALSE returns distance matrix as dist object
+  n = nrow(s)
+  p <- ncol(s)
+  D = matrix(0,n,n)
+  m <- 1
+  
+  for (i in 1:(n-1)){
+    for (j in (i+1):n){
+      nd <- matrix(0,p,1)
+      dd1 <- matrix(0,p,1)
+      dd2 <- matrix(0,p,1)
+      for (k in 1:p){
+        nd[k,]<- s[i,k]*s[j,k]
+        dd1[k,] <- (s[i,k])^2
+        dd2[k,] <- (s[j,k])^2
+      }
+      D[i,j] <- sqrt(2*(1-(sum(nd)/sqrt(sum(dd1)*
+                                          sum(dd2)))))
+      D[j,i] <- D[i,j]
+    }
+  }
+  
+  if(diag==FALSE) {D=as.dist(D)}
+  return (D)
+}
+
+chord1 <- chord(Dend,diag=FALSE)
+chord.v <- as.vector(chord1)
+label <- rownames(Dend)
+chord.dis <- agnes(chord1, method="average", diss = TRUE) 
+chord.disv<-as.vector(chord.dis)
+# very simple dendrogram
+plot(chord.dis, ask = FALSE, which.plots = 2,labels = label)
+
+#Cophenetic Distance and Correlation
+chord.ave.co <- cophenetic(chord.dis)
+chord.ave.cov <- as.vector(chord.ave.co)
+cor(chord.ave.cov, chord.v)
+plot(y = chord.ave.cov, x = chord.v)
+
+#RMSE
+rmse <- function(x, dis.matrix){
+ r.m.s.e <- 1- (mean(as.vector(x)^2))/var(as.vector(dis.matrix))
+ return(r.m.s.e)
+}
+chord.co.resid <- chord.ave.cov - chord.v
+rmse(chord.co.resid, chord.v)
+
+hc.rows<-hclust(chord.dis$diss)
+jpeg("pheatmapZ.jpeg", width = 4, height = 4.75, units = 'in', res = 300)
+pheatmap(Dend,  color = colorRampPalette(brewer.pal(n = 7, name =
+"RdYlBu"))(100), show_rownames = TRUE, show_colnames = TRUE,
+         cluster_rows=hc.rows,
+         clustering_method = "average",
+fontsize_row=8)
+dev.off()
+
+a<-c(expression(paste(italic("Y3$Title"), "Go")), expression(paste(italic("Y3$Title"), "Go")))
+
+
+```
+
+
