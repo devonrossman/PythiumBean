@@ -1,0 +1,56 @@
+#High Resolution images, below:
+#http://www.r-bloggers.com/high-resolution-figures-in-r/
+
+
+#Sev Graph, Ordered (By Temp)
+```{r, echo=FALSE}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(nlme)
+library(ggplot2)
+library(plyr)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
+Y3<-subset(Y, !(Y$Sev=="NA")
+)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trial<-as.character(Y3$Trial)
+Y3$Temp<-as.character(Y3$Temp)
+
+Y4<-( ddply(Y3, c("Title", "Temp"), summarise,
+               N    = length(Sev),
+            Sevsd = sd(Sev, na.rm=TRUE),
+            Sevse = Sevsd / sqrt(N)))
+fit3 <- lmer(Sev ~ Title*Var*Temp 
+             + (1|Iso/(Title:Trial:Set)), data=Y3)
+ls1<-lsmeans(fit3, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3) ~ Title:Temp)
+lsmean1<-summary(ls1)
+lsmean1<-as.data.frame(lsmean1$lsmeans)
+#print(lsmean1)
+
+limits<-aes(ymin=lsmean1$lsmean-(Y4$Sevse), ymax=lsmean1$lsmean+(Y4$Sevse))
+
+limits2<-aes(ymin=lsmean1$lsmean-(1.96*lsmean1$SE), ymax=lsmean1$lsmean+(1.96*lsmean1$SE))
+
+colnames(lsmean1)[2]<-c("Temperature")
+
+mycols<-colors()[c(128,554, 3)]
+
+jpeg("SevbyTemp1.jpeg", width = 5, height = 8, units = 'in', res = 1200)
+
+g<-ggplot(lsmean1, aes(x=Title, y=lsmean, color=Temperature, fill=Temperature))
+g+ geom_point(aes(x=reorder(Title, -lsmean)), position=position_dodge(width=0.5), size=1)+
+  #theme_light()+
+  #facet_grid(Var~.)+
+geom_errorbar(limits, width=0.5, position=position_dodge(width=0.5))+
+  labs(y="Disease Severity Index", x="")+
+  theme(axis.text.x=element_text(angle=60, hjust=1, vjust=1, color="black", size=7, face="italic"),
+axis.title.y=element_text(size=7), legend.text=element_text(angle=0, color="black", size=9), legend.text.align=0.5, legend.title=element_text(angle=0, size=10), legend.title.align=0.5, legend.position="right", axis.text.y=element_text(angle=90, hjust=0.5, vjust=1, color="black", size=6), legend.text.align=0.5) + 
+  geom_hline(aes(yintercept=0.28, linetype="dashed")) + scale_color_manual(values=mycols)+
+  #scale_colour_manual(name = 'p<0.05', values = setNames(c('red','dark green'), c(T, F))) +
+  scale_y_continuous("Disease Severity Index", breaks=c(0, 0.5, 1), limits=c(-0.04, 1.03))
+dev.off()
+```
+

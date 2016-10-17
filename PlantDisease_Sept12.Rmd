@@ -1,2 +1,91 @@
 
+#Emerge + Root Growth
+```{r, echo=FALSE}
+library(scales)
+library(plyr)
+library(lme4)
+library(nlme)
+library(lsmeans)
+library(cluster)
+library(ade4)
+library(stats)
+library(tabplot)
+library(ggplot2)
+#update.packages("tabplot")
+rm(list = ls())
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtareatrial=="NA") & !(Y$rtwghttrial=="NA"))
+se <- function(x) sqrt(var(x, na.rm=TRUE)/(length(na.omit(x))))
+
+rtwght <- lmer(rtwghttrial ~ Title*Var + (1|Iso/Title:Trial:Set), data=Y3)
+lsrtwght<-lsmeans(rtwght, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title)
+rtwghtlsmeans<-summary(lsrtwght)
+v1<-c("Root Weight %")
+v2<-rep(v1, 31)
+v3<-as.data.frame(rtwghtlsmeans$lsmeans$Title)
+Yrtwght <- as.data.frame(cbind(v3, rtwghtlsmeans$lsmeans$lsmean, rtwghtlsmeans$lsmeans$SE, v2))
+serror<-aggregate(Y3$rtwghttrial, list(Y3$Title, Y3$Title), se)
+Yrtwght<-cbind(Yrtwght, serror$x)
+colnames(Yrtwght) <- c("Title", "mean" , "SE", "Data", "se")
+
+rtarea <- lmer(rtareatrial ~ Title*Var + (1|Iso/Title:Trial:Set), data=Y3)
+lsrtarea<-lsmeans(rtarea, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title)
+rtarealsmeans<-summary(lsrtarea)
+v1<-c("Root Area %")
+v2<-rep(v1, 31)
+v3<-as.data.frame(rtarealsmeans$lsmeans$Title)
+Yrtarea <- as.data.frame(cbind(v3, rtarealsmeans$lsmeans$lsmean, rtarealsmeans$lsmeans$SE, v2))
+serror<-aggregate(Y3$rtareatrial, list(Y3$Title, Y3$Title), se)
+Yrtarea<-cbind(Yrtarea, serror$x)
+colnames(Yrtarea) <- c("Title", "mean" , "SE", "Data", "se")
+
+rtlngth <- lmer(rtlngthtrial ~ Title*Var + (1|Iso/Title:Trial:Set), data=Y3)
+lsrtlngth<-lsmeans(rtlngth, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title)
+rtlngthlsmeans<-summary(lsrtlngth)
+v1<-c("Root Length %")
+v2<-rep(v1, 31)
+v3<-as.data.frame(rtarealsmeans$lsmeans$Title)
+Yrtlngth <- as.data.frame(cbind(v3, rtlngthlsmeans$lsmeans$lsmean, rtlngthlsmeans$lsmeans$SE, v2))
+serror<-aggregate(Y3$rtlngthtrial, list(Y3$Title, Y3$Title), se)
+Yrtlngth<-cbind(Yrtlngth, serror$x)
+colnames(Yrtlngth) <- c("Title", "mean" , "SE", "Data", "se")
+
+Emerge <- lmer(emergetrial ~ Title*Var + (1|Iso/Title:Trial:Set), data=Y3)
+lsEmerge<-lsmeans(Emerge, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title)
+Emergelsmeans<-summary(lsEmerge)
+v1<-c("Emergence %")
+v2<-rep(v1, 31)
+v3<-as.data.frame(Emergelsmeans$lsmeans$Title)
+YEmerge <- as.data.frame(cbind(v3, Emergelsmeans$lsmeans$lsmean, Emergelsmeans$lsmeans$SE, v2))
+serror<-aggregate(Y3$emergetrial, list(Y3$Title, Y3$Title), se)
+YEmerge<-cbind(YEmerge, serror$x)
+colnames(YEmerge) <- c("Title", "mean" , "SE", "Data", "se")
+
+Y4<-as.data.frame(rbind(Yrtwght, Yrtarea, Yrtlngth, YEmerge))
+cbPalette<-c("dark grey", "white")
+cPalette<-c("black")
+limits<-aes(ymax=mean+(se), ymin=mean-(se))
+
+jpeg("Rootgrowth.jpeg", width = 8.5, height = 5.5, units = 'in', res = 300)
+
+y <- ggplot(Y4, aes(y=mean, color=cPalette,
+                    x=reorder(Title, -mean)))
+y+geom_bar(data=Yrtwght, aes(x=reorder(Title, -mean), fill=mean>75.5), stat="identity", width=0.7)+
+  geom_bar(data=Yrtlngth, aes(x=reorder(Title, -mean), fill=mean+(SE*1.96)>82), stat="identity", width=0.7)+
+    geom_bar(data=Yrtarea, aes(x=reorder(Title, -mean), fill=mean+(SE*1.96)>82), stat="identity", width=0.7)+
+  geom_bar(data=YEmerge, aes( x=reorder(Title, -mean), fill=mean+(SE*1.96)>84), stat="identity", width=0.7)+
+  geom_errorbar(limits, stat="identity", width=0.4)+
+  facet_grid(Data~.)+
+  theme_light()+
+labs(title="Seedling Assay", x="Pythium spp.", y="Percent Relative to NIC")+
+ theme(text=element_text(family="Arial Narrow"),
+       plot.title=element_text(size=20, colour="black"),
+axis.title=element_text(size=13, colour="black"), axis.text.x=element_text(size=8, color="black", angle=90, hjust=1, vjust=0.5), axis.text.y=element_text(size=10, color="black"), strip.text.y = element_text(size = 7, color="black"),
+strip.text.x = element_text(size = 10, color="black"))+
+scale_y_continuous(limits=c(-10,130), oob=rescale_none)+
+  scale_fill_manual(values=cbPalette)+
+  scale_color_manual(values=cPalette)
+
+dev.off()
+```
 
