@@ -13,6 +13,8 @@ library(nlme)
 library(ggplot2)
 library(pheatmap)
 library(RColorBrewer)
+library(Hmisc)
+citation("Hmisc")
 Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
 Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA") & (Y$Var=="RH")
 )
@@ -87,6 +89,8 @@ rmse <- function(x, dis.matrix){
 }
 chord.co.resid <- chord.ave.cov - chord.v
 rmse(chord.co.resid, chord.v)
+
+cite(rcorr)
 
 hc.rows<-hclust(chord.dis$diss)
 jpeg("pheatmapRH.jpeg", width = 4, height = 4.75, units = 'in', res = 300)
@@ -226,6 +230,10 @@ scale_y_continuous(limits=c(0,1), oob=rescale_none)+
   #geom_vline(xintercept=37.5)
 dev.off()
 ```
+
+
+
+
 
 
 Clade Disease
