@@ -302,7 +302,7 @@ library(RColorBrewer)
 library(Hmisc)
 citation("Hmisc")
 Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
-Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA") & (Y$Var=="RH")
+Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA") & (Y$Var=="RH") & !(Y$Title=="NIC, No Rice")
 )
 Y3$Trt<-as.character(Y3$Trt)
 Y3$Iso<-as.character(Y3$Iso)
@@ -322,7 +322,7 @@ lngth1<-summary(ls3)
 emerge1<-summary(ls4)
 
 Z <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
-Z3<-subset(Z, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA") & (Y$Var=="Z")
+Z3<-subset(Z, !(Z$rtwghttrial=="NA") & !(Z$rtareatrial=="NA") & (Z$Var=="Z")& !(Z$Title=="NIC, No Rice")
 )
 fitwghtz <- lmer(rtwghttrial ~ Title + (1|Iso/Title:Trial:Set), data=Z3)
 fitareaz <- lmer(rtareatrial ~ Title + (1|Iso/Title:Trial:Set), data=Z3)
@@ -337,9 +337,25 @@ area1z<-summary(ls2)
 lngth1z<-summary(ls3)
 emerge1z<-summary(ls4)
 
-Dend<-cbind(wght1$lsmeans$lsmean, area1$lsmeans$lsmean,lngth1$lsmeans$lsmean,emerge1$lsmeans$lsmean,wght1z$lsmeans$lsmean, area1z$lsmeans$lsmean,lngth1z$lsmeans$lsmean,emerge1z$lsmeans$lsmean)
-Dend<-scale(as.matrix(Dend)) 
-colnames(Dend)<-c("RH Root Dry Weight", "RH Root Area", "RH Root Length", "RH Emergence", "Z Root Dry Weight", "Z Root Area", "Z Root Length", "Z Emergence")
+
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
+RZ<-subset(Y, !(Y$Sev=="NA") & (Y$Var=="Z")
+)
+fitrotz <- lmer((1-Sev)*100 ~ Title + (1|Iso/Title:Trial:Set), data=RZ)
+lsz<-lsmeans(fitrotz, contrast(trt.vs.ctrl, fitrotz@frame$Title, ref=3)  ~ Title)
+rotz<-summary(lsz)
+
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
+RRH<-subset(Y, !(Y$Sev=="NA") & (Y$Var=="RH")
+)
+fitrotrh <- lmer((1-Sev)*100 ~ Title + (1|Iso/Title:Trial:Set), data=RRH)
+lsrh<-lsmeans(fitrotrh, contrast(trt.vs.ctrl, fitrotrh@frame$Title, ref=3)  ~ Title)
+rotrh<-summary(lsrh)
+
+Dend<-cbind(wght1$lsmeans$lsmean, area1$lsmeans$lsmean,lngth1$lsmeans$lsmean,emerge1$lsmeans$lsmean,wght1z$lsmeans$lsmean, area1z$lsmeans$lsmean,lngth1z$lsmeans$lsmean,emerge1z$lsmeans$lsmean,rotz$lsmeans$lsmean,rotrh$lsmeans$lsmean )
+
+colnames(Dend)<-c("RH Root Dry Weight", "RH Root Area", "RH Root Length", "RH Emergence", "Z Root Dry Weight", "Z Root Area", "Z Root Length", "Z Emergence", 'Z DSI', 'RH DSI')
+
 rownames(Dend)=wght1$lsmeans$Title
 chord = function (s,diag) {
   # G.Nesslage, B.Maurer
@@ -406,9 +422,311 @@ dev.off()
 
 a<-c(expression(paste(italic("Y3$Title"), "Go")), expression(paste(italic("Y3$Title"), "Go")))
 
+```
 
 
+Zorro Dendogram, Both Assays
+```{r, echo=FALSE}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(cluster)
+library(nlme)
+library(ggplot2)
+library(pheatmap)
+library(RColorBrewer)
+library(Hmisc)
+citation("Hmisc")
 
+Z <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Z3<-subset(Z, !(Z$rtwghttrial=="NA") & !(Z$rtareatrial=="NA") & (Z$Var=="Z")& !(Z$Title=="NIC, No Rice")
+)
+fitwghtz <- lmer(rtwghttrial ~ Title + (1|Iso/Title:Trial:Set), data=Z3)
+fitareaz <- lmer(rtareatrial ~ Title + (1|Iso/Title:Trial:Set), data=Z3)
+fitlngthz <- lmer(rtlngthtrial ~ Title + (1|Iso/Title:Trial:Set), data=Z3)
+fitemergez <- lmer(emergetrial ~ Title + (1|Iso/Title:Trial:Set), data=Z3)
+ls1<-lsmeans(fitwghtz, contrast(trt.vs.ctrl, fitwght@frame$Title, ref=3)  ~ Title)
+ls2<-lsmeans(fitareaz, contrast(trt.vs.ctrl, fitarea@frame$Title, ref=3)  ~ Title)
+ls3<-lsmeans(fitlngthz, contrast(trt.vs.ctrl, fitlngth@frame$Title, ref=3)  ~ Title)
+ls4<-lsmeans(fitemergez, contrast(trt.vs.ctrl, fitemerge@frame$Title, ref=3)  ~ Title)
+wght1z<-summary(ls1)
+area1z<-summary(ls2)
+lngth1z<-summary(ls3)
+emerge1z<-summary(ls4)
+
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
+RZ<-subset(Y, !(Y$Sev=="NA") & (Y$Var=="Z")
+)
+fitrotz <- lmer((1-Sev)*100 ~ Title + (1|Iso/Title:Trial:Set), data=RZ)
+lsz<-lsmeans(fitrotz, contrast(trt.vs.ctrl, fitrotz@frame$Title, ref=3)  ~ Title)
+rotz<-summary(lsz)
+
+Dend<-cbind(wght1z$lsmeans$lsmean, area1z$lsmeans$lsmean,lngth1z$lsmeans$lsmean,emerge1z$lsmeans$lsmean,rotz$lsmeans$lsmean)
+
+colnames(Dend)<-c("Z Root Dry Weight", "Z Root Area", "Z Root Length", "Z Emergence", 'Z DSI')
+
+rownames(Dend)=wght1z$lsmeans$Title
+chord = function (s,diag) {
+  # G.Nesslage, B.Maurer
+  # computes chord distance
+  # diag == TRUE returns full distance matrix
+  # diag == FALSE returns distance matrix as dist object
+  n = nrow(s)
+  p <- ncol(s)
+  D = matrix(0,n,n)
+  m <- 1
+  
+  for (i in 1:(n-1)){
+    for (j in (i+1):n){
+      nd <- matrix(0,p,1)
+      dd1 <- matrix(0,p,1)
+      dd2 <- matrix(0,p,1)
+      for (k in 1:p){
+        nd[k,]<- s[i,k]*s[j,k]
+        dd1[k,] <- (s[i,k])^2
+        dd2[k,] <- (s[j,k])^2
+      }
+      D[i,j] <- sqrt(2*(1-(sum(nd)/sqrt(sum(dd1)*
+                                          sum(dd2)))))
+      D[j,i] <- D[i,j]
+    }
+  }
+  
+  if(diag==FALSE) {D=as.dist(D)}
+  return (D)
+}
+
+chord1 <- chord(Dend,diag=FALSE)
+chord.v <- as.vector(chord1)
+label <- rownames(Dend)
+chord.dis <- agnes(chord1, method="average", diss = TRUE) 
+chord.disv<-as.vector(chord.dis)
+# very simple dendrogram
+plot(chord.dis, ask = FALSE, which.plots = 2,labels = label)
+
+#Cophenetic Distance and Correlation
+chord.ave.co <- cophenetic(chord.dis)
+chord.ave.cov <- as.vector(chord.ave.co)
+cor(chord.ave.cov, chord.v)
+plot(y = chord.ave.cov, x = chord.v)
+
+#RMSE
+rmse <- function(x, dis.matrix){
+ r.m.s.e <- 1- (mean(as.vector(x)^2))/var(as.vector(dis.matrix))
+ return(r.m.s.e)
+}
+chord.co.resid <- chord.ave.cov - chord.v
+rmse(chord.co.resid, chord.v)
+
+hc.rows<-hclust(chord.dis$diss)
+jpeg("pheatmapZboth.jpeg", width = 4, height = 4.75, units = 'in', res = 300)
+pheatmap(Dend,  color = colorRampPalette(brewer.pal(n = 7, name =
+"RdYlBu"))(100), show_rownames = TRUE, show_colnames = TRUE,
+         cluster_rows=hc.rows,
+         clustering_method = "average",
+fontsize_row=8)
+dev.off()
+```
+
+Red Hawk Dendogram, Both Assays
+```{r, echo=FALSE}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(cluster)
+library(nlme)
+library(ggplot2)
+library(pheatmap)
+library(RColorBrewer)
+library(Hmisc)
+citation("Hmisc")
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA") & (Y$Var=="RH") & !(Y$Title=="NIC, No Rice")
+)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trial<-as.character(Y3$Trial)
+fitwght <- lmer(rtwghttrial ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitarea <- lmer(rtareatrial ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitlngth <- lmer(rtlngthtrial ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitemerge <- lmer(emergetrial ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+ls1<-lsmeans(fitwght, contrast(trt.vs.ctrl, fitwght@frame$Title, ref=3)  ~ Title)
+ls2<-lsmeans(fitarea, contrast(trt.vs.ctrl, fitarea@frame$Title, ref=3)  ~ Title)
+ls3<-lsmeans(fitlngth, contrast(trt.vs.ctrl, fitlngth@frame$Title, ref=3)  ~ Title)
+ls4<-lsmeans(fitemerge, contrast(trt.vs.ctrl, fitemerge@frame$Title, ref=3)  ~ Title)
+wght1<-summary(ls1)
+area1<-summary(ls2)
+lngth1<-summary(ls3)
+emerge1<-summary(ls4)
+
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
+RRH<-subset(Y, !(Y$Sev=="NA") & (Y$Var=="RH")
+)
+fitrotrh <- lmer((1-Sev)*100 ~ Title + (1|Iso/Title:Trial:Set), data=RRH)
+lsrh<-lsmeans(fitrotrh, contrast(trt.vs.ctrl, fitrotrh@frame$Title, ref=3)  ~ Title)
+rotrh<-summary(lsrh)
+
+Dend<-cbind(wght1$lsmeans$lsmean, area1$lsmeans$lsmean,lngth1$lsmeans$lsmean,emerge1$lsmeans$lsmean,rotrh$lsmeans$lsmean )
+
+colnames(Dend)<-c("RH Root Dry Weight", "RH Root Area", "RH Root Length", "RH Emergence", 'RH DSI')
+
+rownames(Dend)=wght1$lsmeans$Title
+chord = function (s,diag) {
+  # G.Nesslage, B.Maurer
+  # computes chord distance
+  # diag == TRUE returns full distance matrix
+  # diag == FALSE returns distance matrix as dist object
+  n = nrow(s)
+  p <- ncol(s)
+  D = matrix(0,n,n)
+  m <- 1
+  
+  for (i in 1:(n-1)){
+    for (j in (i+1):n){
+      nd <- matrix(0,p,1)
+      dd1 <- matrix(0,p,1)
+      dd2 <- matrix(0,p,1)
+      for (k in 1:p){
+        nd[k,]<- s[i,k]*s[j,k]
+        dd1[k,] <- (s[i,k])^2
+        dd2[k,] <- (s[j,k])^2
+      }
+      D[i,j] <- sqrt(2*(1-(sum(nd)/sqrt(sum(dd1)*
+                                          sum(dd2)))))
+      D[j,i] <- D[i,j]
+    }
+  }
+  
+  if(diag==FALSE) {D=as.dist(D)}
+  return (D)
+}
+
+chord1 <- chord(Dend,diag=FALSE)
+chord.v <- as.vector(chord1)
+label <- rownames(Dend)
+chord.dis <- agnes(chord1, method="average", diss = TRUE) 
+chord.disv<-as.vector(chord.dis)
+# very simple dendrogram
+plot(chord.dis, ask = FALSE, which.plots = 2,labels = label)
+
+#Cophenetic Distance and Correlation
+chord.ave.co <- cophenetic(chord.dis)
+chord.ave.cov <- as.vector(chord.ave.co)
+cor(chord.ave.cov, chord.v)
+plot(y = chord.ave.cov, x = chord.v)
+
+#RMSE
+rmse <- function(x, dis.matrix){
+ r.m.s.e <- 1- (mean(as.vector(x)^2))/var(as.vector(dis.matrix))
+ return(r.m.s.e)
+}
+chord.co.resid <- chord.ave.cov - chord.v
+rmse(chord.co.resid, chord.v)
+
+hc.rows<-hclust(chord.dis$diss)
+jpeg("pheatmapRHboth.jpeg", width = 4, height = 4.75, units = 'in', res = 300)
+pheatmap(Dend,  color = colorRampPalette(brewer.pal(n = 7, name =
+"RdYlBu"))(100), show_rownames = TRUE, show_colnames = TRUE,
+         cluster_rows=hc.rows,
+         clustering_method = "average",
+fontsize_row=8)
+dev.off()
+
+```
+
+Dendogram for Seed Rot Assay
+```{r, echo=FALSE}
+
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(cluster)
+library(nlme)
+library(ggplot2)
+library(pheatmap)
+library(RColorBrewer)
+library(Hmisc)
+
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
+RRH<-subset(Y, !(Y$Sev=="NA") & (Y$Var=="RH") & (Y$Temp=="20 C")
+)
+fitrotrh <- lmer((1-Sev)*100 ~ Title + (1|Iso/Title:Trial:Set), data=RRH)
+lsrh<-lsmeans(fitrotrh, contrast(trt.vs.ctrl, fitrotrh@frame$Title, ref=3)  ~ Title)
+rotrh<-summary(lsrh)
+
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotMay9.csv"))
+RZ<-subset(Y, !(Y$Sev=="NA") & (Y$Var=="Z")& (Y$Temp=="20 C")
+)
+fitrotz <- lmer((1-Sev)*100 ~ Title + (1|Iso/Title:Trial:Set), data=RZ)
+lsz<-lsmeans(fitrotz, contrast(trt.vs.ctrl, fitrotz@frame$Title, ref=3)  ~ Title)
+rotz<-summary(lsz)
+
+Dend<-cbind(rotrh$lsmeans$lsmean, rotz$lsmeans$lsmean )
+
+colnames(Dend)<-c('RH DSI', 'Z DSI')
+
+rownames(Dend)=rotz$lsmeans$Title
+chord = function (s,diag) {
+  # G.Nesslage, B.Maurer
+  # computes chord distance
+  # diag == TRUE returns full distance matrix
+  # diag == FALSE returns distance matrix as dist object
+  n = nrow(s)
+  p <- ncol(s)
+  D = matrix(0,n,n)
+  m <- 1
+  
+  for (i in 1:(n-1)){
+    for (j in (i+1):n){
+      nd <- matrix(0,p,1)
+      dd1 <- matrix(0,p,1)
+      dd2 <- matrix(0,p,1)
+      for (k in 1:p){
+        nd[k,]<- s[i,k]*s[j,k]
+        dd1[k,] <- (s[i,k])^2
+        dd2[k,] <- (s[j,k])^2
+      }
+      D[i,j] <- sqrt(2*(1-(sum(nd)/sqrt(sum(dd1)*
+                                          sum(dd2)))))
+      D[j,i] <- D[i,j]
+    }
+  }
+  
+  if(diag==FALSE) {D=as.dist(D)}
+  return (D)
+}
+
+chord1 <- chord(Dend,diag=FALSE)
+chord.v <- as.vector(chord1)
+label <- rownames(Dend)
+chord.dis <- agnes(chord1, method="average", diss = TRUE) 
+chord.disv<-as.vector(chord.dis)
+# very simple dendrogram
+plot(chord.dis, ask = FALSE, which.plots = 2,labels = label)
+
+#Cophenetic Distance and Correlation
+chord.ave.co <- cophenetic(chord.dis)
+chord.ave.cov <- as.vector(chord.ave.co)
+cor(chord.ave.cov, chord.v)
+plot(y = chord.ave.cov, x = chord.v)
+
+#RMSE
+rmse <- function(x, dis.matrix){
+ r.m.s.e <- 1- (mean(as.vector(x)^2))/var(as.vector(dis.matrix))
+ return(r.m.s.e)
+}
+chord.co.resid <- chord.ave.cov - chord.v
+rmse(chord.co.resid, chord.v)
+
+hc.rows<-hclust(chord.dis$diss)
+jpeg("pheatmapDSIboth.jpeg", width = 4, height = 4.75, units = 'in', res = 300)
+pheatmap(Dend,  color = colorRampPalette(brewer.pal(n = 7, name =
+"RdYlBu"))(100), show_rownames = TRUE, show_colnames = TRUE,
+         cluster_rows=hc.rows,
+         clustering_method = "average",
+fontsize_row=8)
+dev.off()
 
 
 
