@@ -39,7 +39,7 @@ colnames(lsmean1)[2]<-c("Temperature")
 
 mycols<-colors()[c(128,554, 3)]
 
-jpeg("SevbyTemp.jpeg", width = 5, height = 8, units = 'in', res = 1200)
+jpeg("SevbyTemp.jpeg", width = 6, height = 8, units = 'in', res = 1200)
 
 g<-ggplot(lsmean1, aes(x=Title, y=lsmean, color=Temperature, fill=Temperature, linetype="dashed"))
 g+ geom_point(aes(x=reorder(Title, -lsmean)), position=position_dodge(width=0.5), size=1)+

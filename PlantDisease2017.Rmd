@@ -1,0 +1,349 @@
+---
+title: "PlntDiss-2017"
+author: "Devon"
+date: "January 23, 2017"
+output: html_document
+---
+
+
+
+```{r, echo=FALSE}
+
+
+
+
+
+```
+
+
+#Cup Assay, Emergence+Root Paramters
+#Black and White
+```{r, echo=FALSE}
+library(scales)
+library(plyr)
+library(lme4)
+library(nlme)
+library(lsmeans)
+library(cluster)
+library(ade4)
+library(stats)
+library(tabplot)
+library(ggplot2)
+#update.packages("tabplot")
+rm(list = ls())
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtareatrial=="NA") & !(Y$rtwghttrial=="NA"))
+se <- function(x) sqrt(var(x, na.rm=TRUE)/(length(na.omit(x))))
+
+rtwght <- lmer(rtwghttrial ~ Title*Var + (1|Iso/Title:Trial:Set), data=Y3)
+lsrtwght<-lsmeans(rtwght, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title)
+rtwghtlsmeans<-summary(lsrtwght)
+v1<-c("Root Weight %")
+v2<-rep(v1, 31)
+v3<-as.data.frame(rtwghtlsmeans$lsmeans$Title)
+Yrtwght <- as.data.frame(cbind(v3, rtwghtlsmeans$lsmeans$lsmean, rtwghtlsmeans$lsmeans$SE, v2))
+serror<-aggregate(Y3$rtwghttrial, list(Y3$Title, Y3$Title), se)
+Yrtwght<-cbind(Yrtwght, serror$x)
+colnames(Yrtwght) <- c("Title", "mean" , "SE", "Data", "se")
+
+rtarea <- lmer(rtareatrial ~ Title*Var + (1|Iso/Title:Trial:Set), data=Y3)
+lsrtarea<-lsmeans(rtarea, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title)
+rtarealsmeans<-summary(lsrtarea)
+v1<-c("Root Area %")
+v2<-rep(v1, 31)
+v3<-as.data.frame(rtarealsmeans$lsmeans$Title)
+Yrtarea <- as.data.frame(cbind(v3, rtarealsmeans$lsmeans$lsmean, rtarealsmeans$lsmeans$SE, v2))
+serror<-aggregate(Y3$rtareatrial, list(Y3$Title, Y3$Title), se)
+Yrtarea<-cbind(Yrtarea, serror$x)
+colnames(Yrtarea) <- c("Title", "mean" , "SE", "Data", "se")
+
+rtlngth <- lmer(rtlngthtrial ~ Title*Var + (1|Iso/Title:Trial:Set), data=Y3)
+lsrtlngth<-lsmeans(rtlngth, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title)
+rtlngthlsmeans<-summary(lsrtlngth)
+v1<-c("Root Length %")
+v2<-rep(v1, 31)
+v3<-as.data.frame(rtarealsmeans$lsmeans$Title)
+Yrtlngth <- as.data.frame(cbind(v3, rtlngthlsmeans$lsmeans$lsmean, rtlngthlsmeans$lsmeans$SE, v2))
+serror<-aggregate(Y3$rtlngthtrial, list(Y3$Title, Y3$Title), se)
+Yrtlngth<-cbind(Yrtlngth, serror$x)
+colnames(Yrtlngth) <- c("Title", "mean" , "SE", "Data", "se")
+
+Emerge <- lmer(emergetrial ~ Title*Var + (1|Iso/Title:Trial:Set), data=Y3)
+lsEmerge<-lsmeans(Emerge, contrast(trt.vs.ctrl, fit3@frame$Title, ref=3)  ~ Title)
+Emergelsmeans<-summary(lsEmerge)
+v1<-c("Emergence %")
+v2<-rep(v1, 31)
+v3<-as.data.frame(Emergelsmeans$lsmeans$Title)
+YEmerge <- as.data.frame(cbind(v3, Emergelsmeans$lsmeans$lsmean, Emergelsmeans$lsmeans$SE, v2))
+serror<-aggregate(Y3$emergetrial, list(Y3$Title, Y3$Title), se)
+YEmerge<-cbind(YEmerge, serror$x)
+colnames(YEmerge) <- c("Title", "mean" , "SE", "Data", "se")
+
+Y4<-as.data.frame(rbind(Yrtwght, Yrtarea, Yrtlngth, YEmerge))
+cbPalette<-c("dark grey", "white")
+cPalette<-c("black")
+limits<-aes(ymax=mean+(se), ymin=mean-(se))
+
+jpeg("Rootgrowth.jpeg", width = 8.5, height = 5.5, units = 'in', res = 300)
+
+y <- ggplot(Y4, aes(y=mean, color=cPalette,
+                    x=reorder(Title, -mean)))
+y+geom_bar(data=Yrtwght, aes(x=reorder(Title, -mean), fill=mean>75.5), stat="identity", width=0.7)+
+  geom_bar(data=Yrtlngth, aes(x=reorder(Title, -mean), fill=mean+(SE*1.96)>82), stat="identity", width=0.7)+
+    geom_bar(data=Yrtarea, aes(x=reorder(Title, -mean), fill=mean+(SE*1.96)>82), stat="identity", width=0.7)+
+  geom_bar(data=YEmerge, aes( x=reorder(Title, -mean), fill=mean+(SE*1.96)>84), stat="identity", width=0.7)+
+  geom_errorbar(limits, stat="identity", width=0.4)+
+  facet_grid(Data~.)+
+  theme_light()+
+labs(title="Seedling Assay", x="", y="Percent Relative to NIC")+
+ theme(text=element_text(family="Arial Narrow"),
+       plot.title=element_text(size=18, colour="black"),
+axis.title=element_text(size=11, colour="black", face="bold"), axis.text.x=element_text(size=8, color="black", angle=60, hjust=1, vjust=1, face="bold.italic"), axis.text.y=element_text(size=9.5, color="black"), strip.text.y = element_text(size = 9.5, color="black"),
+strip.text.x = element_text(size = 11, color="black"))+
+scale_y_continuous(limits=c(-10,130), oob=rescale_none)+
+  scale_fill_manual(values=cbPalette)+
+  scale_color_manual(values=cPalette)
+
+dev.off()
+```
+
+
+#Sev Graph, Ordered (By Temp)
+```{r, echo=FALSE}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(nlme)
+library(ggplot2)
+library(plyr)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllRotOct24.csv", header=TRUE, stringsAsFactors=FALSE, fileEncoding="latin1"))
+Y3<-subset(Y, !(Y$Sev=="NA")
+)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trial<-as.character(Y3$Trial)
+Y3$Temp<-as.character(Y3$Temp)
+
+Y4<-( ddply(Y3, c("Title", "Temp"), summarise,
+               N    = length(Sev),
+            mean1= mean(Sev),
+            Sevsd = sd(Sev, na.rm=TRUE),
+            Sevse = Sevsd / sqrt(N)))
+fit3 <- lmer(Sev ~ Title*Var*Temp 
+             + (1|Iso/(Title:Trial:Set)), data=Y3)
+ls1<-lsmeans(fit3, contrast(pairwise, fit3@frame$Title, ref=3) ~ Title:Temp)
+lsmean1<-summary(ls1)
+lsmean1<-as.data.frame(lsmean1$lsmeans)
+#print(lsmean1)
+
+limits<-aes(ymin=lsmean1$lsmean-(Y4$Sevse), ymax=lsmean1$lsmean+(Y4$Sevse))
+
+limits2<-aes(ymin=lsmean1$lsmean-(1.96*lsmean1$SE), ymax=lsmean1$lsmean+(1.96*lsmean1$SE))
+
+colnames(lsmean1)[2]<-c("Temperature")
+
+mycols<-colors()[c(128,554, 3)]
+
+jpeg("SevbyTemp.jpeg", width = 6, height = 8, units = 'in', res = 1200)
+
+g<-ggplot(lsmean1, aes(x=Title, y=lsmean, color=Temperature, fill=Temperature, linetype="dashed"))
+g+ geom_point(aes(x=reorder(Title, -lsmean)), position=position_dodge(width=0.5), size=1)+
+  #theme_light()+
+  #facet_grid(Var~.)+
+geom_errorbar(limits, width=0.5, position=position_dodge(width=0.5))+
+  labs(y="Disease Severity Index", x="")+
+  theme(axis.text.x=element_text(angle=60, hjust=1, vjust=1, color="black", size=7, face="bold.italic"),
+axis.title.y=element_text(size=8.5, face="bold"), legend.text=element_text(angle=0, color="black", size=9), legend.text.align=0.5, legend.title=element_text(angle=0, size=10), legend.title.align=0.5, legend.position="right", axis.text.y=element_text(angle=90, hjust=0.5, vjust=1, color="black", size=8.25), legend.text.align=0.5) + 
+  geom_hline(aes(yintercept=0.28, linetype="longdash" )) + scale_color_manual(values=mycols)+
+  #scale_colour_manual(name = 'p<0.05', values = setNames(c('red','dark green'), c(T, F))) +
+  scale_y_continuous("Disease Severity Index", breaks=c(0, 0.5, 1), limits=c(-0.04, 1.03))
+dev.off()
+```
+
+
+
+
+#Agglomerative, Hierarchical Clustering
+#Tests based on Lsmeans, Chord for RedHawk Cup Assay
+```{r}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(cluster)
+library(nlme)
+library(ggplot2)
+library(pheatmap)
+library(RColorBrewer)
+library(Hmisc)
+citation("Hmisc")
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA") & (Y$Var=="RH")
+)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trial<-as.character(Y3$Trial)
+fitwght <- lmer(rtwghttrial ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitarea <- lmer(rtareatrial ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitlngth <- lmer(rtlngthtrial ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitemerge <- lmer(emergetrial ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+ls1<-lsmeans(fitwght, contrast(trt.vs.ctrl, fitwght@frame$Title, ref=3)  ~ Title)
+ls2<-lsmeans(fitarea, contrast(trt.vs.ctrl, fitarea@frame$Title, ref=3)  ~ Title)
+ls3<-lsmeans(fitlngth, contrast(trt.vs.ctrl, fitlngth@frame$Title, ref=3)  ~ Title)
+ls4<-lsmeans(fitemerge, contrast(trt.vs.ctrl, fitemerge@frame$Title, ref=3)  ~ Title)
+wght1<-summary(ls1)
+area1<-summary(ls2)
+lngth1<-summary(ls3)
+emerge1<-summary(ls4)
+Dend<-cbind(wght1$lsmeans$lsmean, area1$lsmeans$lsmean,lngth1$lsmeans$lsmean,emerge1$lsmeans$lsmean)
+Dend<-scale(as.matrix(Dend)) 
+colnames(Dend)<-c("Root Dry Weight", "Root Area", "Root Length", "Emergence")
+rownames(Dend)=wght1$lsmeans$Title
+chord = function (s,diag) {
+  # G.Nesslage, B.Maurer
+  # computes chord distance
+  # diag == TRUE returns full distance matrix
+  # diag == FALSE returns distance matrix as dist object
+  n = nrow(s)
+  p <- ncol(s)
+  D = matrix(0,n,n)
+  m <- 1
+  
+  for (i in 1:(n-1)){
+    for (j in (i+1):n){
+      nd <- matrix(0,p,1)
+      dd1 <- matrix(0,p,1)
+      dd2 <- matrix(0,p,1)
+      for (k in 1:p){
+        nd[k,]<- s[i,k]*s[j,k]
+        dd1[k,] <- (s[i,k])^2
+        dd2[k,] <- (s[j,k])^2
+      }
+      D[i,j] <- sqrt(2*(1-(sum(nd)/sqrt(sum(dd1)*
+                                          sum(dd2)))))
+      D[j,i] <- D[i,j]
+    }
+  }
+  
+  if(diag==FALSE) {D=as.dist(D)}
+  return (D)
+}
+
+chord1 <- chord(Dend,diag=FALSE)
+chord.v <- as.vector(chord1)
+label <- rownames(Dend)
+chord.dis <- agnes(chord1, method="average", diss = TRUE) 
+chord.disv<-as.vector(chord.dis)
+# very simple dendrogram
+plot(chord.dis, ask = FALSE, which.plots = 2,labels = label)
+
+#Cophenetic Distance and Correlation
+chord.ave.co <- cophenetic(chord.dis)
+chord.ave.cov <- as.vector(chord.ave.co)
+cor(chord.ave.cov, chord.v)
+plot(y = chord.ave.cov, x = chord.v)
+
+#RMSE
+rmse <- function(x, dis.matrix){
+ r.m.s.e <- 1- (mean(as.vector(x)^2))/var(as.vector(dis.matrix))
+ return(r.m.s.e)
+}
+chord.co.resid <- chord.ave.cov - chord.v
+rmse(chord.co.resid, chord.v)
+
+cite(rcorr)
+
+hc.rows<-hclust(chord.dis$diss)
+jpeg("pheatmapRHtrial.jpeg", width = 4, height = 4.75, units = 'in', res = 300)
+pheatmap(Dend,  color = colorRampPalette(brewer.pal(n = 7, name =
+"RdYlBu"))(100), show_rownames = TRUE, show_colnames = TRUE,
+         cluster_rows=hc.rows,
+         clustering_method = "average",
+fontsize_row=8)
+dev.off()
+
+a<-c(expression(paste(italic("Y3$Title"), "Go")), expression(paste(italic("Y3$Title"), "Go")))
+
+
+```
+
+#Agglomerative, Hierarchical Clustering
+#Tests based on Lsmeans, Chord for Zorro Cup Assay
+```{r}
+library(lme4)
+library(lsmeans)
+library(pbkrtest)
+library(cluster)
+library(nlme)
+library(ggplot2)
+library(pheatmap)
+library(RColorBrewer)
+Y <- (read.csv("/Users/devonrossman/Desktop/CSVforR/DryBean/AllCupApr19.csv"))
+Y3<-subset(Y, !(Y$rtwghttrial=="NA") & !(Y$rtareatrial=="NA") & (Y$Var=="Z")
+)
+Y3$Trt<-as.character(Y3$Trt)
+Y3$Iso<-as.character(Y3$Iso)
+Y3$Set<-as.character(Y3$Set)
+Y3$Trial<-as.character(Y3$Trial)
+fitwght <- lmer(rtwghttrial ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitarea <- lmer(rtareatrial ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitlngth <- lmer(rtlngthtrial ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+fitemerge <- lmer(emergetrial ~ Title + (1|Iso/Title:Trial:Set), data=Y3)
+ls1<-lsmeans(fitwght, contrast(trt.vs.ctrl, fitwght@frame$Title, ref=3)  ~ Title)
+ls2<-lsmeans(fitarea, contrast(trt.vs.ctrl, fitarea@frame$Title, ref=3)  ~ Title)
+ls3<-lsmeans(fitlngth, contrast(trt.vs.ctrl, fitlngth@frame$Title, ref=3)  ~ Title)
+ls4<-lsmeans(fitemerge, contrast(trt.vs.ctrl, fitemerge@frame$Title, ref=3)  ~ Title)
+wght1<-summary(ls1)
+area1<-summary(ls2)
+lngth1<-summary(ls3)
+emerge1<-summary(ls4)
+Dend<-cbind(wght1$lsmeans$lsmean, area1$lsmeans$lsmean,lngth1$lsmeans$lsmean,emerge1$lsmeans$lsmean)
+Dend<-scale(as.matrix(Dend)) 
+colnames(Dend)<-c("Root Dry Weight", "Root Area", "Root Length", "Emergence")
+rownames(Dend)=wght1$lsmeans$Title
+chord = function (s,diag) {
+  # G.Nesslage, B.Maurer
+  # computes chord distance
+  # diag == TRUE returns full distance matrix
+  # diag == FALSE returns distance matrix as dist object
+  n = nrow(s)
+  p <- ncol(s)
+  D = matrix(0,n,n)
+  m <- 1
+  
+  for (i in 1:(n-1)){
+    for (j in (i+1):n){
+      nd <- matrix(0,p,1)
+      dd1 <- matrix(0,p,1)
+      dd2 <- matrix(0,p,1)
+      for (k in 1:p){
+        nd[k,]<- s[i,k]*s[j,k]
+        dd1[k,] <- (s[i,k])^2
+        dd2[k,] <- (s[j,k])^2
+      }
+      D[i,j] <- sqrt(2*(1-(sum(nd)/sqrt(sum(dd1)*
+                                          sum(dd2)))))
+      D[j,i] <- D[i,j]
+    }
+  }
+  
+  if(diag==FALSE) {D=as.dist(D)}
+  return (D)
+}
+
+chord1 <- chord(Dend,diag=FALSE)
+chord.v <- as.vector(chord1)
+label <- rownames(Dend)
+chord.dis <- agnes(chord1, method="average", diss = TRUE) 
+
+hc.rows<-hclust(chord.dis$diss)
+jpeg("pheatmapZtrial.jpeg", width = 4, height = 4.75, units = 'in', res = 300)
+pheatmap(Dend,  color = colorRampPalette(brewer.pal(n = 7, name =
+"RdYlBu"))(100), show_rownames = TRUE, show_colnames = TRUE,
+         cluster_rows=hc.rows,
+         clustering_method = "average",
+fontsize_row=8)
+dev.off()
+```
+
